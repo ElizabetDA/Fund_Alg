@@ -1,0 +1,3 @@
+Hello123@ World!
+Test#Line with symbols$.
+Another$12345!
