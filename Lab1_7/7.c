@@ -3,6 +3,17 @@
 
 #define MAX_WORD_LEN 1000
 
+int string_compare(const char *str1, const char *str2) {
+    while (*str1 && *str2) {
+        if (*str1 != *str2) {
+            return 0; // строки не равны
+        }
+        str1++;
+        str2++;
+    }
+    return (*str1 == '\0' && *str2 == '\0'); // строки равны
+}
+
 char to_lowercase(char c) {
     if (c >= 'A' && c <= 'Z') {
         return c + ('a' - 'A');
@@ -28,7 +39,6 @@ void to_base8(int num, char *buffer) {
     buffer[i] = '\0';
 }
 
-// Чтение лексем из файла
 int read_word(FILE *file, char *word) {
     int i = 0;
     char c;
@@ -52,7 +62,7 @@ void process_t_flag(const char *file1_path, const char *file2_path, const char *
     FILE *output = fopen(output_path, "w");
 
     if (file1 == NULL || file2 == NULL || output == NULL) {
-        printf("Ошибка при открытии файлов.\n");
+        printf("Ошибка при открытии файлов\n");
         return;
     }
 
@@ -82,13 +92,12 @@ void process_t_flag(const char *file1_path, const char *file2_path, const char *
     fclose(output);
 }
 
-
 void process_a_flag(const char *input_path, const char *output_path) {
     FILE *input = fopen(input_path, "r");
     FILE *output = fopen(output_path, "w");
 
     if (input == NULL || output == NULL) {
-        printf("Ошибка при открытии файлов.\n");
+        printf("Ошибка при открытии файлов\n");
         return;
     }
 
@@ -99,7 +108,6 @@ void process_a_flag(const char *input_path, const char *output_path) {
         word_count++;
 
         if (word_count % 10 == 0) {
-            // Преобразуем в ASCII и выводим в cc 4
             for (int i = 0; word[i] != '\0'; i++) {
                 char base4[10];
                 to_base4((int) word[i], base4);
@@ -110,7 +118,6 @@ void process_a_flag(const char *input_path, const char *output_path) {
                 fprintf(output, "%c", to_lowercase(word[i]));
             }
         } else if (word_count % 5 == 0 && word_count % 10 != 0) {
-            // Преобразуем в ASCII и выводим в cc 8
             for (int i = 0; word[i] != '\0'; i++) {
                 char base8[10];
                 to_base8((int) word[i], base8);
@@ -129,13 +136,23 @@ void process_a_flag(const char *input_path, const char *output_path) {
 
 int main(int argc, char *argv[]) {
     if (argc < 4) {
-        printf("Недостаточно аргументов.\n");
+        printf("Недостаточно аргументов\n");
         return 1;
     }
 
     char *flag = argv[1];
     if (flag[0] != '-') {
-        printf("Неверный формат флага.\n");
+        printf("Неверный формат флага\n");
+        return 1;
+    }
+
+    if ((flag[1] == 't' && argc < 5) || (flag[1] == 'a' && argc < 4)) {
+        printf("Недостаточно аргументов\n");
+        return 1;
+    }
+
+    if (string_compare(argv[2], argv[3]) || string_compare(argv[2], argv[4]) || string_compare(argv[3], argv[4])) {
+        printf("Ошибка: файлы ввода и вывода должны быть разными\n");
         return 1;
     }
 

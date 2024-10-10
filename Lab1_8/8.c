@@ -10,6 +10,18 @@ int str_len(const char *str) {
     return len;
 }
 
+int str_cmp(const char *str1, const char *str2) { //сравнение строк
+    int i = 0;
+    while (str1[i] != '\0' && str2[i] != '\0') {
+        if (str1[i] != str2[i]) {
+            return 0;  // Строки не равны
+        }
+        i++;
+    }
+    // Проверяем, одинаковы ли длины строк
+    return str1[i] == '\0' && str2[i] == '\0';
+}
+
 int In(char letter, const char *alphabet) {
     for (size_t i = 0; i < str_len(alphabet); ++i) {
         if (letter == alphabet[i]) {
@@ -114,15 +126,20 @@ int main(int argc, char *argv[]) {
     char *input_file = argv[1];
     char *output_file = argv[2];
 
+    if (str_cmp(input_file, output_file)) {
+        printf("Ошибка: имена файлов ввода и вывода не должны совпадать.\n");
+        return 1;
+    }
+
     FILE *input = fopen(input_file, "r");
     if (!input) {
-        printf("Error: Cannot open input file %s\n", input_file);
+        printf("Ошибка: не открывается input файл %s\n", input_file);
         return 1;
     }
 
     FILE *output = fopen(output_file, "w");
     if (!output) {
-        printf("Error: Cannot open or create output file %s\n", output_file);
+        printf("Ошибка: не открывается output файл %s\n", output_file);
         fclose(input);
         return 1;
     }
@@ -131,5 +148,7 @@ int main(int argc, char *argv[]) {
 
     fclose(input);
     fclose(output);
+
+
     return 0;
 }
