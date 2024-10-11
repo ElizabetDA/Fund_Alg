@@ -1,0 +1,2 @@
+apple banana cat  dog    elephant   fox  giraffe
+house    iguana      jaguar kite   lion monkey
