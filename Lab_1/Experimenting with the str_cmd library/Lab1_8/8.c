@@ -10,18 +10,6 @@ int str_len(const char *str) {
     return len;
 }
 
-int str_cmp(const char *str1, const char *str2) { //сравнение строк
-    int i = 0;
-    while (str1[i] != '\0' && str2[i] != '\0') {
-        if (str1[i] != str2[i]) {
-            return 0;  // Строки не равны
-        }
-        i++;
-    }
-    // Проверяем, одинаковы ли длины строк
-    return str1[i] == '\0' && str2[i] == '\0';
-}
-
 int In(char letter, const char *alphabet) {
     for (size_t i = 0; i < str_len(alphabet); ++i) {
         if (letter == alphabet[i]) {
@@ -107,7 +95,7 @@ void Solution(FILE *input, FILE *output) {
             max_value = max(max_value, value);
         }
 
-        min_base = max(max_value + 1, 2); // Минимальное основание сc
+        min_base = max(max_value + 1, min_base); // Минимальное основание сc
         if (min_base > 36) {
             fprintf(output, "Число '%s' не может быть представлено в системе счисления от 2 до 36\n", number);
         } else {
@@ -126,11 +114,11 @@ int main(int argc, char *argv[]) {
     char *input_file = argv[1];
     char *output_file = argv[2];
 
-    if (str_cmp(input_file, output_file)) {
+    if (string_compare(input_file, output_file)) {
         printf("Ошибка: имена файлов ввода и вывода не должны совпадать.\n");
         return 1;
     }
-
+    
     FILE *input = fopen(input_file, "r");
     if (!input) {
         printf("Ошибка: не открывается input файл %s\n", input_file);
