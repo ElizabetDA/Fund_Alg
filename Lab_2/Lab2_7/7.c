@@ -1,6 +1,10 @@
 #include <stdio.h>
 #include <math.h>
 
+typedef enum {
+    SUCCESS = 0,
+} Status;
+
 int Find_root_dichotomy(long double (*func)(long double), long double x0, long double x1, long double epsilon, long double *root) {
     long double result = (x1 - x0) / 2.0;
     long double last = -10e8;
@@ -16,7 +20,7 @@ int Find_root_dichotomy(long double (*func)(long double), long double x0, long d
     }
 
     *root = result;
-    return 0;
+    return SUCCESS;
 }
 
 // x^2 - 4 = 0
