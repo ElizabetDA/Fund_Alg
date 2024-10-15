@@ -1,9 +1,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-int convert_to_base(unsigned int number, unsigned int r, char *result, size_t size) {
+typedef enum {
+    SUCCESS = 0,
+    ERROR_INVALID_BASE,
+    ERROR_BUFFER_OVERFLOW,
+} Status;
+
+Status convert_to_base(unsigned int number, unsigned int r, char *result, size_t size) {
     if (r < 1 || r > 5) {
-        return -1; 
+        return ERROR_INVALID_BASE; 
     }
 
     unsigned int base = 1 << r;  // сдвиг 1 на r битов (умножение 1 на 2^r)
@@ -19,7 +25,7 @@ int convert_to_base(unsigned int number, unsigned int r, char *result, size_t si
     }
 
     if (number > 0) {
-        return -2; // переполнение буфера
+        return ERROR_BUFFER_OVERFLOW;
     }
 
     if (pos > 0) {
@@ -28,7 +34,7 @@ int convert_to_base(unsigned int number, unsigned int r, char *result, size_t si
         }
     }
 
-    return 0;
+    return SUCCESS;
 }
 
 int main() {
