@@ -1,3 +1,6 @@
-Файл: test_files/task_3_test_1_input, Строка: 1, Позиция: 18
-Файл: test_files/task_3_test_1_input, Строка: 3, Позиция: 1
-Файл: test_files/task_3_test_1_input, Строка: 5, Позиция: 21
+Find in:ex3/test1    5 72
+Find in:ex3/test2    4 48
+Find in:ex3/test2    13 5
+Find in:ex3/test2    13 6
+Find in:ex3/test2    13 7
+Find in:ex3/test2    19 33

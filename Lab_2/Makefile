@@ -175,7 +175,7 @@ test_task3_3:
 test_task_3: test_task3_1 test_task3_2 test_task3_3
 	@echo "ALL TESTS TASK 3 PASSED"
 
-test: test_task_1 test_task_2 test_task_4# Здесь перечисляются все написанные вами тесты. Запуск тестов производится по команде make test
+test: test_task_1 test_task_2 test_task_3 test_task_4# Здесь перечисляются все написанные вами тесты. Запуск тестов производится по команде make test
 
 
 #-------------------------------------------------------------------------
