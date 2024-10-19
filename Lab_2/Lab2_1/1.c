@@ -1,7 +1,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-// Подсчёт длины строки (реализация без использования string.h)
+typedef enum {
+    SUCCESS = 0,
+    MISSING_ARGUMENTS_ERROR,
+    ERROR_INPUT,
+    ERROR_INVALID_FLAG
+} Status;
+
 size_t str_len(const char* str) {
     size_t len = 0;
     while (str[len] != '\0') {
@@ -20,8 +26,7 @@ char* reverse_string(const char* str) {
     size_t len = str_len(str);
     char* reversed = (char*)malloc((len + 1) * sizeof(char));
     if (reversed == NULL) {
-        printf("Ошибка: не удалось выделить память\n");
-        return NULL;
+        printf("Ошибка: Не удалось выделить память\n");
     }
 
     for (size_t i = 0; i < len; i++) {
@@ -36,8 +41,7 @@ char* uppercase_odd_positions(const char* str) {
     size_t len = str_len(str);
     char* result = (char*)malloc((len + 1) * sizeof(char));
     if (result == NULL) {
-        printf("Ошибка: не удалось выделить память\n");
-        return NULL;
+        printf("Ошибка: Не удалось выделить память\n");
     }
 
     for (size_t i = 0; i < len; i++) {
@@ -56,8 +60,7 @@ char* sort_string(const char* str) {
     size_t len = str_len(str);
     char* sorted = (char*)malloc((len + 1) * sizeof(char));
     if (sorted == NULL) {
-        printf("Ошибка: не удалось выделить память\n");
-        return NULL;
+        printf("Ошибка: Не удалось выделить память\n");
     }
 
     size_t index = 0;
@@ -95,7 +98,6 @@ char* concatenate_random(int seed, int argc, char** argv) {
     int count = argc - 3;  // Учитываем три первых аргумента
     if (count < 2) {
         printf("Недостаточно строк для конкатенации\n");
-        return NULL;
     }
 
     // Выделяем память для результата
@@ -106,8 +108,7 @@ char* concatenate_random(int seed, int argc, char** argv) {
 
     char* result = (char*)malloc((total_length + 1) * sizeof(char));
     if (result == NULL) {
-        printf("Ошибка: не удалось выделить память\n");
-        return NULL;
+        printf("Ошибка: Не удалось выделить память\n");
     }
 
     result[0] = '\0';  // Начинаем с пустой строки
@@ -155,8 +156,8 @@ unsigned int my_atof(const char *str) {
 
 int main(int argc, char** argv) {
     if (argc < 3) {
-        printf("ввод: <флаг> <строка>\n");
-        return 1;
+        printf("Ввод: <флаг> <строка>\n");
+        return ERROR_INPUT;
     }
 
     char* flag = argv[1];
@@ -189,8 +190,8 @@ int main(int argc, char** argv) {
         } 
         else if (flag[1] == 'c') {
             if (argc < 4) {
-                printf("Ошибка: недостаточно аргументов для флага -c\n");
-                return 1;
+                printf("Ошибка: Недостаточно аргументов для флага -c\n");
+                return MISSING_ARGUMENTS_ERROR;
             }
             unsigned int seed = my_atof(argv[2]);
             char* concatenated = concatenate_random(seed, argc, argv);
@@ -200,21 +201,13 @@ int main(int argc, char** argv) {
             }
         } 
         else {
-            printf("Ошибка: неизвестный флаг %s\n", flag);
-            return 1;
+            printf("Ошибка: Неизвестный флаг %s\n", flag);
+            return ERROR_INVALID_FLAG;
         }
     } else {
-        printf("Ошибка: неверный формат флага\n");
-        return 1;
+        printf("Ошибка: Неправильный формат флага\n");
+        return ERROR_INVALID_FLAG;
     }
 
     return 0;
 }
-
-/*
-./program -l "hello"
-./program -r "world"
-./program -u "example"
-./program -n "a1b2c3"
-./program -c 12 "first" "second" "third"
-*/

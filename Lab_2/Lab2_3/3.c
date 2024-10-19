@@ -1,6 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+typedef enum {
+    SUCCESS = 0,
+    ERROR_SUBSTRING_FOUND,
+    ERROR_OPENING_FILE,
+    ERROR_ALL_ZERO
+} Status;
 
 // Функция для поиска подстроки в строке (посимвольное сравнение)
 int Find_substring(const char *line, const char *substring, int *position) {
@@ -9,7 +15,7 @@ int Find_substring(const char *line, const char *substring, int *position) {
     while (substring[sub_len] != '\0') sub_len++;  // Длина подстроки
 
     if (sub_len == 0) {
-        return 0; // Пустая подстрока
+        return SUCCESS; // Пустая подстрока
     }
 
     for (int i = 0; i <= line_len - sub_len; i++) {
@@ -22,18 +28,18 @@ int Find_substring(const char *line, const char *substring, int *position) {
         }
         if (match) {
             *position = i;
-            return 1; // Найдена подстрока
+            return ERROR_SUBSTRING_FOUND; // Найдена подстрока
         }
     }
-    return 0; // Подстрока не найдена
+    return SUCCESS; // Подстрока не найдена
 }
 
 // Функция для обработки каждого файла
 int Process_file(const char *filepath, const char *substring) {
     FILE *file = fopen(filepath, "r");
     if (file == NULL) {
-        printf("Не могу открыть файл\n");
-        return 1;
+        printf("Не могу открыть файл: %s\n", filepath);
+        return ERROR_OPENING_FILE;
     }
 
     char line[1024];
@@ -43,7 +49,7 @@ int Process_file(const char *filepath, const char *substring) {
     while (fgets(line, sizeof(line), file) != NULL) {
         int position = 0;
         int found = Find_substring(line, substring, &position);
-        while (found) {
+        while (found == ERROR_SUBSTRING_FOUND) {
             printf("Файл: %s, Строка: %d, Позиция: %d\n", filepath, line_number, position + 1);
             found = Find_substring(line + position + 1, substring, &position); // Продолжаем поиск на оставшейся части строки
         }
@@ -51,36 +57,42 @@ int Process_file(const char *filepath, const char *substring) {
     }
 
     fclose(file);
-    return 0;
+    return SUCCESS;
 }
 
 // Основная функция для поиска подстроки в нескольких файлах
-double Find_in_files(const char *substring, int file_count, const char *filepaths[]) {
+int Find_in_files(const char *substring, int file_count, const char *filepaths[]) {
     if (substring == NULL || substring[0] == '\0') {
         printf("Всё по нулям\n");
-        return 1;
+        return ERROR_ALL_ZERO;
     }
 
     for (int i = 0; i < file_count; i++) {
-        double status = Process_file(filepaths[i], substring);
-        if (status != 0) {
-            printf("Ошибка при открытии файла: %s\n", filepaths[i]);
+        int status = Process_file(filepaths[i], substring);
+        if (status != SUCCESS) {
+            return status; // Возвращаем ошибку при открытии файла
         }
     }
 
-    return 0;
+    return SUCCESS;
 }
 
 // Пример использования функции
-int main() {
-    const char *substring = "example"; // Подстрока для поиска
-    const char *files[] = {"file1.txt", "file2.txt"}; // Пути к файлам
-    int file_count = sizeof(files) / sizeof(files[0]);
-
-    double status = Find_in_files(substring, file_count, files);
-    if (status != 0) {
-        printf("Ошибка при поиске подстроки.\n");
+int main(int argc, const char *argv[]) {
+    if (argc < 3) {
+        printf("Использование: %s <подстрока> <файлы...>\n", argv[0]);
+        return ERROR_ALL_ZERO;
     }
 
-    return 0;
+    const char *substring = argv[1];
+    const char **files = &argv[2];
+    int file_count = argc - 2;
+
+    int status = Find_in_files(substring, file_count, files);
+    if (status != SUCCESS) {
+        printf("Ошибка при поиске подстроки.\n");
+        return status;
+    }
+
+    return SUCCESS;
 }
