@@ -141,6 +141,14 @@ test_task_2: test_task2_1 test_task2_2
 
 #------------------------------------------------------------------------
 
+test_task3_1:
+	@$(SUCCESS_IFILE_OFILE) "Lab2_3/3.a" "test_files/task_3_test_1_input" "test_files/task_3_test_1_output"
+	@echo "TEST 9(task_3) PASSED"
+
+test_task_3: test_task3_1
+	@echo "ALL TESTS TASK 3 PASSED"
+
+
 
 test_task4_1:
 	@$(SUCCESS_IFILE_OFILE) "Lab2_4/4.a" "test_files/task_4_test_1_input" "test_files/task_4_test_1_output"
@@ -150,8 +158,27 @@ test_task_4: test_task4_1
 	@echo "ALL TESTS TASK 4 PASSED"
 
 
+test_task5_1:
+	@$(SUCCESS_IFILE_OFILE) "Lab2_5/5.a" "test_files/task_5_test_1_input" "test_files/task_5_test_1_output"
+	@echo "TEST 13(task_5) PASSED"
+
+test_task_5: test_task5_1
+	@echo "ALL TESTS TASK 5 PASSED"
+
+test_task7_1:
+	@$(SUCCESS_IFILE_OFILE) "Lab2_7/7.a" "test_files/task_7_test_1_input" "test_files/task_7_test_1_output"
+	@echo "TEST 14(task_7) PASSED"
+
+test_task_7: test_task7_1
+	@echo "ALL TESTS TASK 7 PASSED"
 
 
+test_task8_1:
+	@$(SUCCESS_IFILE_OFILE) "Lab2_8/8.a" "test_files/task_8_test_1_input" "test_files/task_8_test_1_output"
+	@echo "TEST 15(task_8) PASSED"
+
+test_task_8: test_task8_1
+	@echo "ALL TESTS TASK 8 PASSED"
 
 
 
@@ -159,23 +186,7 @@ test_task_4: test_task4_1
 
 #------------------------------------------------------------------------
 
-test_task3_1:
-	@$(SUCCESS_IFILE_OFILE) "Lab2_3/3.a" "test_files/task_3_test_1_input" "test_files/task_3_test_1_output"
-	@echo "TEST 9(task_3 sss) PASSED"
-
-
-test_task3_2:
-	@$(SUCCESS_IFILE_OFILE) "Lab2_3/3.a" "test_files/task_3_test_2_input" "test_files/task_3_test_2_output"
-	@echo "TEST 10(task_3 many separators) PASSED"
-
-test_task3_3:
-	@$(SUCCESS_IFILE_OFILE) "Lab2_3/3.a "test_files/task_3_test_3_input" "test_files/task_3_test_3_output"
-	@echo "TEST 11(task_3 ssss) PASSED"
-
-test_task_3: test_task3_1 test_task3_2 test_task3_3
-	@echo "ALL TESTS TASK 3 PASSED"
-
-test: test_task_1 test_task_2 test_task_3 test_task_4# Здесь перечисляются все написанные вами тесты. Запуск тестов производится по команде make test
+test: test_task_1 test_task_2 test_task_3 test_task_4 test_task_5 test_task_7 test_task_8# Здесь перечисляются все написанные вами тесты. Запуск тестов производится по команде make test
 
 
 #-------------------------------------------------------------------------
