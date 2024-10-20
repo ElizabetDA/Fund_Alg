@@ -3,24 +3,25 @@
 
 typedef enum {
     SUCCESS = 0,
+    ERROR_NULL_ROOT = 1,
+    ERROR_INVALID_INTERVAL = 2,
 } Status;
 
-int Find_root_dichotomy(long double (*func)(long double), long double x0, long double x1, long double epsilon, long double *root) {
-    long double result = (x1 - x0) / 2.0;
+long double Dychotomy(long double x0, long double x1, long double (*func)(long double), long double EPSILON) {
+    long double res = (x1 + x0) / 2.0;  // Изменено на (x1 + x0)
     long double last = -10e8;
 
-    while (fabsl(func(result) - func(last)) >= epsilon) {
-        if (func(result) > 0) {
-            x1 = result;
+    while (fabsl(func(res) - func(last)) >= EPSILON) {
+        if (func(res) > 0) {
+            x1 = res;
         } else {
-            x0 = result;
+            x0 = res;
         }
-        last = result;
-        result = (x0 + x1) / 2.0;
+        last = res;
+        res = (x0 + x1) / 2.0;  // Подсчет нового значения
     }
-
-    *root = result;
-    return SUCCESS;
+    
+    return res;
 }
 
 // x^2 - 4 = 0
@@ -34,24 +35,16 @@ long double equation2(long double x) {
 }
 
 int main() {
-    long double root;
-    int status;
+    long double root1, root2;
+    long double epsilon = 0.000001L;
 
-    //x^2 - 4 = 0 на интервале [0, 3]
-    status = Find_root_dichotomy(equation1, 0, 3, 0.000001L, &root);
-    if (status == 0) {
-        printf("Корень уравнения x^2 - 4 = 0: %Lf\n", root);
-    } else {
-        printf("Ошибка в поиске корня для уравнения x^2 - 4 = 0\n");
-    }
+    // x^2 - 4 = 0 на интервале [0, 3]
+    root1 = Dychotomy(0, 3, equation1, epsilon);
+    printf("Корень уравнения x^2 - 4 = 0: %Lf\n", root1);
 
     // sin(x) - x/2 = 0 на интервале [1, 2]
-    status = Find_root_dichotomy(equation2, 1, 2, 0.000001L, &root);
-    if (status == 0) {
-        printf("Корень уравнения sin(x) - x/2 = 0: %Lf\n", root);
-    } else {
-        printf("Ошибка в поиске корня для уравнения sin(x) - x/2 = 0\n");
-    }
+    root2 = Dychotomy(1, 2, equation2, epsilon);
+    printf("Корень уравнения sin(x) - x/2 = 0: %Lf\n", root2);
 
     return 0;
 }

@@ -18,7 +18,7 @@ int Find_substring(const char *line, const char *substring, int *position) {
         return SUCCESS; // Пустая подстрока
     }
 
-    for (int i = 0; i <= line_len - sub_len; i++) {
+    for (int i = *position; i <= line_len - sub_len; i++) {
         int match = 1;
         for (int j = 0; j < sub_len; j++) {
             if (line[i + j] != substring[j]) {
@@ -48,11 +48,12 @@ int Process_file(const char *filepath, const char *substring) {
     // Чтение файла построчно
     while (fgets(line, sizeof(line), file) != NULL) {
         int position = 0;
-        int found = Find_substring(line, substring, &position);
-        while (found == ERROR_SUBSTRING_FOUND) {
+
+        while (Find_substring(line, substring, &position) == ERROR_SUBSTRING_FOUND) {
             printf("Файл: %s, Строка: %d, Позиция: %d\n", filepath, line_number, position + 1);
-            found = Find_substring(line + position + 1, substring, &position); // Продолжаем поиск на оставшейся части строки
+            position++;  // Смещаем позицию для следующего поиска
         }
+
         line_number++;
     }
 
@@ -77,22 +78,57 @@ int Find_in_files(const char *substring, int file_count, const char *filepaths[]
     return SUCCESS;
 }
 
-// Пример использования функции
-int main(int argc, const char *argv[]) {
-    if (argc < 3) {
-        printf("Использование: %s <подстрока> <файлы...>\n", argv[0]);
+int main() {
+    char substring[256]; // Массив для хранения подстроки
+    int file_count;
+
+    // Ввод подстроки
+    printf("Введите подстроку для поиска: ");
+    scanf("%255s", substring); // Чтение строки, ограничивая длину
+    printf("\n");
+
+    // Ввод количества файлов
+    printf("Введите количество файлов: ");
+    scanf("%d", &file_count); // Чтение количества файлов
+    printf("\n");
+
+    // Проверка корректности введённого количества файлов
+    if (file_count <= 0) {
+        printf("Количество файлов должно быть больше нуля.\n");
         return ERROR_ALL_ZERO;
     }
 
-    const char *substring = argv[1];
-    const char **files = &argv[2];
-    int file_count = argc - 2;
+    // Массив для хранения имен файлов
+    char **files = malloc(file_count * sizeof(char *));
+    if (files == NULL) {
+        printf("Ошибка выделения памяти.\n");
+        return ERROR_ALL_ZERO;
+    }
 
-    int status = Find_in_files(substring, file_count, files);
+    // Ввод имен файлов
+    for (int i = 0; i < file_count; ++i) {
+        files[i] = malloc(256 * sizeof(char)); // Выделение памяти для каждого имени файла
+        if (files[i] == NULL) {
+            printf("Ошибка выделения памяти для имени файла.\n");
+            return ERROR_ALL_ZERO;
+        }
+        printf("Введите путь к файлу %d: ", i + 1);
+        scanf("%255s", files[i]); // Чтение пути к файлу
+        printf("\n");
+    }
+
+    // Поиск подстроки в файлах
+    int status = Find_in_files(substring, file_count, (const char **)files);
     if (status != SUCCESS) {
         printf("Ошибка при поиске подстроки.\n");
         return status;
     }
+
+    // Освобождение памяти
+    for (int i = 0; i < file_count; ++i) {
+        free(files[i]);
+    }
+    free(files);
 
     return SUCCESS;
 }

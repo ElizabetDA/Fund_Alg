@@ -8,10 +8,10 @@ typedef enum {
 void int_to_roman(int num, char *result);
 void my_strcat(char *dest, const char *src);
 void print_fibonacci_reverse(int n, FILE *stream);
-void print_in_base(int num, int base, FILE *stream, int uppercase);
+void print_in_base(int num, int base, FILE *stream, int is_upper);
 void print_memory_representation(const void *ptr, size_t size, FILE *stream);
 
-// Пример обработки римских цифр
+// Функция для преобразования целого числа в римскую запись
 void int_to_roman(int num, char *result) {
     struct Roman {
         int value;
@@ -42,7 +42,7 @@ void my_strcat(char *dest, const char *src) {
     *dest = '\0'; // Завершаем строку
 }
 
-// Вывод чисел Фибоначчи в обратном порядке
+// Функция для вывода чисел Фибоначчи в обратном порядке
 void print_fibonacci_reverse(int n, FILE *stream) {
     if (n <= 0) 
         return;
@@ -61,41 +61,39 @@ void print_fibonacci_reverse(int n, FILE *stream) {
 
     // Выводим в обратном порядке
     for (int i = count - 1; i >= 0; i--) {
-        fprintf(stream, "%d ", fib[i]);
-    }
-    fputc('\n', stream); // Завершение строки
-}
-
-// Вывод целого числа в заданной системе счисления
-void print_in_base(int num, int base, FILE *stream, int uppercase) {
-    if (num == 0) {
-        fputc('0', stream);
-        return;
-    }
-    char buffer[32];
-    int i = 0;
-
-    while (num > 0) {
-        int digit = num % base;
-        buffer[i++] = (digit < 10) ? '0' + digit : (uppercase ? 'A' + digit - 10 : 'a' + digit - 10);
-        num /= base;
-    }
-    
-    // Выводим в обратном порядке
-    for (int j = i - 1; j >= 0; j--) {
-        fputc(buffer[j], stream);
+        fprintf(stream, "%d", fib[i]);
+        if (i > 0) {
+            fputc(' ', stream); // Добавляем пробел между числами, кроме последнего
+        }
     }
 }
 
-// Вывод представления памяти
+// Функция для вывода целого числа в заданной системе счисления
+void print_in_base(int num, int base, FILE *stream, int is_upper) {
+    if (base == 16) {
+        // Верхний регистр для шестнадцатеричных чисел
+        if (is_upper) {
+            fprintf(stream, "%X", num);
+        } else {
+            fprintf(stream, "%x", num); // Нижний регистр
+        }
+    } else if (base == 8) {
+        fprintf(stream, "%o", num); // Восьмеричная система
+    } else {
+        fprintf(stream, "%d", num); // По умолчанию выводим как десятичное
+    }
+}
+
+// Функция для вывода представления памяти
 void print_memory_representation(const void *ptr, size_t size, FILE *stream) {
     const unsigned char *byte_ptr = (const unsigned char *)ptr;
     for (size_t i = 0; i < size; i++) {
         if (i > 0) fputc(' ', stream); // Разделяем пробелом
-        fprintf(stream, "%02X", byte_ptr[i]); // Выводим в шестнадцатеричном формате с ведущим нулем (должно занимать не менее 2 символов)
+        fprintf(stream, "%02X", byte_ptr[i]); // Выводим в шестнадцатеричном формате с ведущим нулем
     }
 }
 
+// Основная функция для форматированного вывода
 int overfprintf(FILE *stream, const char *format, ...) {
     va_list args;
     va_start(args, format);
@@ -110,49 +108,59 @@ int overfprintf(FILE *stream, const char *format, ...) {
                 int num = va_arg(args, int);
                 int_to_roman(num, temp);
                 fputs(temp, stream);
+                fputc('\n', stream); // Добавляем новую строку
             } else if (*p == 'Z' && *(p + 1) == 'r') { // Число Фибоначчи
                 p += 2;
                 int n = va_arg(args, int);
                 print_fibonacci_reverse(n, stream);
+                fputc('\n', stream); // Добавляем новую строку
             } else if (*p == 'C') { // Система счисления
                 p++;
                 int num = va_arg(args, int);
                 int base = va_arg(args, int);
                 print_in_base(num, base, stream, 0);
+                fputc('\n', stream); // Добавляем новую строку
             } else if (*p == 'C' && *(p + 1) == 'V') { // Система счисления (uppercase)
                 p += 2;
                 int num = va_arg(args, int);
                 int base = va_arg(args, int);
                 print_in_base(num, base, stream, 1);
+                fputc('\n', stream); // Добавляем новую строку
             } else if (*p == 'o' && *(p + 1) == '%') { // Восьмеричная система
                 p += 2;
                 int num = va_arg(args, int);
                 print_in_base(num, 8, stream, 0); // Восьмеричная система
+                fputc('\n', stream); // Добавляем новую строку
             } else if (*p == 'T' && *(p + 1) == '0') { // Целое число
                 p += 2;
                 int num = va_arg(args, int);
                 fprintf(stream, "%d", num);
-            } else if (*p == 'm' && *(p + 1) == 'i') { // Представление памяти
+                fputc('\n', stream); // Добавляем новую строку
+            } else if (*p == 'm' && *(p + 1) == 'i') { // Представление памяти (int)
                 p += 2;
                 int num = va_arg(args, int);
                 print_memory_representation(&num, sizeof(num), stream);
-            } else if (*p == 'm' && *(p + 1) == 'u') { // Представление памяти беззнакового
+                fputc('\n', stream); // Добавляем новую строку
+            } else if (*p == 'm' && *(p + 1) == 'u') { // Представление памяти (unsigned int)
                 p += 2;
                 unsigned int num = va_arg(args, unsigned int);
                 print_memory_representation(&num, sizeof(num), stream);
-            } else if (*p == 'm' && *(p + 1) == 'd') { // Представление памяти double
+                fputc('\n', stream); // Добавляем новую строку
+            } else if (*p == 'm' && *(p + 1) == 'd') { // Представление памяти (double)
                 p += 2;
                 double num = va_arg(args, double);
                 print_memory_representation(&num, sizeof(num), stream);
-            } else if (*p == 'm' && *(p + 1) == 'f') { // Представление памяти float
+                fputc('\n', stream); // Добавляем новую строку
+            } else if (*p == 'm' && *(p + 1) == 'f') { // Представление памяти (float)
                 p += 2;
                 float num = va_arg(args, double); // float передается как double
                 print_memory_representation(&num, sizeof(num), stream);
+                fputc('\n', stream); // Добавляем новую строку
             }
         } else {
             fputc(*p, stream);
-            p++;
         }
+        p++;
     }
     va_end(args);
     return SUCCESS;
@@ -161,13 +169,18 @@ int overfprintf(FILE *stream, const char *format, ...) {
 int main() {
     overfprintf(stdout, "Число в римской записи: %rO\n", 42);
     overfprintf(stdout, "Число Фибоначчи (3 числа): %Zr\n", 3);
-    overfprintf(stdout, "Число в шестнадцатеричной системе: %C, 255 16\n", 42, 16);
+    overfprintf(stdout, "Число в шестнадцатеричной системе: %C\n", 42, 16);
     overfprintf(stdout, "Число в восьмеричной системе: %o%\n", 42);
     overfprintf(stdout, "Целое число: %T0\n", 42);
-    overfprintf(stdout, "Представление памяти (int): %mi\n", 42);
-    overfprintf(stdout, "Представление памяти (unsigned int): %mu\n", 42u);
-    overfprintf(stdout, "Представление памяти (double): %md\n", 42.0);
-    overfprintf(stdout, "Представление памяти (float): %mf\n", 42.0f);
+    
+    int num = 42;
+    overfprintf(stdout, "Представление памяти (int): %mi\n", num);
+    unsigned int u_num = 42u;
+    overfprintf(stdout, "Представление памяти (unsigned int): %mu\n", u_num);
+    double d_num = 42.0;
+    overfprintf(stdout, "Представление памяти (double): %md\n", d_num);
+    float f_num = 42.0f;
+    overfprintf(stdout, "Представление памяти (float): %mf\n", f_num);
     
     return 0;
 }
