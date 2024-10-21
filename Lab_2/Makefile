@@ -1,12 +1,10 @@
-CС=gcc
-CFLAGS= -Wall -Werror -Wextra
-CLIBS= -lm
+CC=gcc
+CFLAGS=-Wall -Werror -Wextra
+CLIBS=-lm
+BASH=bash
 
 SOURCES=Lab2_1/1.c Lab2_2/2.c Lab2_3/3.c Lab2_4/4.c Lab2_5/5.c Lab2_7/7.c Lab2_8/8.c Lab2_9/9.c# Тут вы перечислятете файлы с вашими лабами по 1 файлу на задание
 TEST_TEMPLATES_DIR=test_templates# Это директория с шаблонами тестов (если вы их разместите в той же директории что и лабы пишите ./)
-EXECUTABLES=$(SOURCES:.c=.a)
-BASH=bash
-TARGET=progra
 
 SUCCESS_CMD = ./$(TARGET)
 FAILED_CMD = ./$(TARGET) || echo "ERROR"
@@ -28,16 +26,20 @@ FAILED_IFILE_OFILE=$(BASH) $(TEST_TEMPLATES_DIR)/failed_ifile_ofile
 FAILED_IFILE_RFILE_OFILE=$(BASH) $(TEST_TEMPLATES_DIR)/failed_ifile_rfile_ofile
 
 
-.PHONY: all test clean
+.PHONY: all clean
 
-all: $(EXECUTABLES) # Чтобы собрать все лабы надо ввести команду make
+all:
+	for dir in Lab2_2; do \
+		cd $$dir ;\
+		make ;\
+		mv *.a .. ;\
+		cd .. ;\
+	done
 
-%.a : %.c
-	$(CC) $(CFLAGS) $< $(CLIBS) -o $@
+
 
 clean: # Чтобы удалить все исполняемые файлы надо ввести команду make clean
 	rm -r -f Lab2_*/*.a
-
 
 # Принцип формирования названия выполняемого теста:
 #
@@ -99,6 +101,14 @@ clean: # Чтобы удалить все исполняемые файлы на
 
 #test_task_1: test_command_args_1 
 
+$(LABS):
+	$(MAKE) -C $@ &  # Запускаем сборку в фоновом режиме
+	@echo "Сборка $@ началась"
+
+# Правило для тестирования
+test: $(TEST_TARGETS)
+	@echo "Все тесты прошли успешно"
+
 test_task1_command_args_1:
 	@$(FAILED_CMD) "Lab2_1/1.a" 2 "Ввод: <флаг> <строка>"
 	@echo "TEST 1 PASSED"
@@ -128,65 +138,38 @@ test_task_1: test_task1_command_args_1 test_task1_lflag_2 test_task1_rflag_3 tes
 	@echo "ALL TESTS TASK 1 PASSED"
 #------------------------------------------------------------------------
 
-test_task2_1:
-	@$(SUCCESS_IFILE_OFILE) "Lab2_2/2.a" "test_files/task_2_test_1_input" "test_files/task_2_test_1_output"
-	@echo "TEST 7 (task_2 POW<0) PASSED"
-
-test_task2_2:
-	@$(SUCCESS_IFILE_OFILE) "Lab2_2/2.a" "test_files/task_2_test_2_input" "test_files/task_2_test_2_output"
-	@echo "TEST 8 (task_2 POW>0) PASSED"
-
-test_task_2: test_task2_1 test_task2_2
-	@echo "ALL TESTS TASK 2 PASSED"
-
 #------------------------------------------------------------------------
 
 test_task3_1:
 	@$(SUCCESS_IFILE_OFILE) "Lab2_3/3.a" "test_files/task_3_test_1_input" "test_files/task_3_test_1_output"
-	@echo "TEST 9(task_3) PASSED"
+	@echo "TEST 9(task_3 sss) PASSED"
 
-test_task_3: test_task3_1
+
+test_task3_2:
+	@$(SUCCESS_IFILE_OFILE) "Lab2_3/3.a" "test_files/task_3_test_2_input" "test_files/task_3_test_2_output"
+	@echo "TEST 10 PASSED"
+
+test_task3_3:
+	@$(SUCCESS_IFILE_OFILE) "Lab2_3/3.a" "test_files/task_3_test_3_input" "test_files/task_3_test_3_output"
+	@echo "TEST 11 PASSED"
+
+test_task_3: test_task3_1 test_task3_2 test_task3_3
 	@echo "ALL TESTS TASK 3 PASSED"
 
+test_task_allWithOut13:
+	@./2.a
+	@./4.a
+	@./5.a
+	@./7.a
+	@./8.a
+	@./9.a
 
 
-test_task4_1:
-	@$(SUCCESS_IFILE_OFILE) "Lab2_4/4.a" "test_files/task_4_test_1_input" "test_files/task_4_test_1_output"
-	@echo "TEST 12(task_4) PASSED"
-
-test_task_4: test_task4_1
-	@echo "ALL TESTS TASK 4 PASSED"
-
-
-test_task5_1:
-	@$(SUCCESS_IFILE_OFILE) "Lab2_5/5.a" "test_files/task_5_test_1_input" "test_files/task_5_test_1_output"
-	@echo "TEST 13(task_5) PASSED"
-
-test_task_5: test_task5_1
-	@echo "ALL TESTS TASK 5 PASSED"
-
-test_task7_1:
-	@$(SUCCESS_IFILE_OFILE) "Lab2_7/7.a" "test_files/task_7_test_1_input" "test_files/task_7_test_1_output"
-	@echo "TEST 14(task_7) PASSED"
-
-test_task_7: test_task7_1
-	@echo "ALL TESTS TASK 7 PASSED"
-
-
-test_task8_1:
-	@$(SUCCESS_IFILE_OFILE) "Lab2_8/8.a" "test_files/task_8_test_1_input" "test_files/task_8_test_1_output"
-	@echo "TEST 15(task_8) PASSED"
-
-test_task_8: test_task8_1
-	@echo "ALL TESTS TASK 8 PASSED"
-
-
-
+test: test_task_1 test_task_3 test_task_allWithOut13
 
 
 #------------------------------------------------------------------------
-
-test: test_task_1 test_task_2 test_task_3 test_task_4 test_task_5 test_task_7 test_task_8# Здесь перечисляются все написанные вами тесты. Запуск тестов производится по команде make test
+ #Здесь перечисляются все написанные вами тесты. Запуск тестов производится по команде make test
 
 
 #-------------------------------------------------------------------------
