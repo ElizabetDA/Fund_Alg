@@ -1,44 +1,43 @@
 #include <check.h>
 #include <math.h>
-#include "geom_mean_power.h" // подключаем заголовочный файл с объявлениями функций
+#include "geom_mean_power.h" 
 
 typedef enum {
     EXIT_SUCCESS = 0,
     EXIT_FAILURE
 } Status;
 
-// Тест для функции geometric_mean
 START_TEST(test_geometric_mean_success) {
     double result;
     int status = geometric_mean(&result, 3, 4.0, 8.0, 16.0);
-    ck_assert_int_eq(status, 0); // Проверка, что функция выполнилась без ошибок
-    ck_assert(fabs(result - 8.0) < 1e-6); // Проверка результата (с использованием эпсилон)
+    ck_assert_int_eq(status, EXIT_SUCCESS);
+    ck_assert(fabs(result - 8.0) < 1e-6);
 }
 END_TEST
 
 START_TEST(test_geometric_mean_invalid_argument) {
     double result;
     int status = geometric_mean(&result, 2, 0.0, 8.0);
-    ck_assert_int_eq(status, -2); // Проверка, что вернулась ошибка для неположительного числа
+    ck_assert_int_eq(status, EXIT_FAILURE);
 }
 END_TEST
 
 // Тесты для функции power
 START_TEST(test_power_positive_exponent) {
     double result = power(2.0, 10);
-    ck_assert(fabs(result - 1024.0) < 1e-6); // Проверка, что 2^10 = 1024
+    ck_assert(fabs(result - 1024.0) < 1e-6);
 }
 END_TEST
 
 START_TEST(test_power_negative_exponent) {
     double result = power(2.0, -2);
-    ck_assert(fabs(result - 0.25) < 1e-6); // Проверка, что 2^-2 = 0.25
+    ck_assert(fabs(result - 0.25) < 1e-6);
 }
 END_TEST
 
 START_TEST(test_power_zero_exponent) {
     double result = power(5.0, 0);
-    ck_assert(fabs(result - 1.0) < 1e-6); // Проверка, что 5^0 = 1
+    ck_assert(fabs(result - 1.0) < 1e-6);
 }
 END_TEST
 
@@ -47,7 +46,7 @@ Suite *geom_mean_power_suite(void) {
     Suite *s;
     TCase *tc_core;
 
-    s = suite_create("Geometric Mean and Power");
+    s = suite_create("Geometric Mean and Power (task 2)");
 
     // Добавляем тесты для геометрического среднего
     tc_core = tcase_create("Core");

@@ -1,47 +1,39 @@
+#include <stdarg.h>
 #include <stdio.h>
-#include <math.h>
+#include "func.h"
 
-// Функция для нахождения наибольшего общего делителя
-long long gcd(long long a, long long b) {
-    while (b != 0) {
-        long long temp = b;
-        b = a % b;
-        a = temp;
-    }
-    return a;
-}
 
-// Функция для проверки конечного представления десятичной дроби в системе счисления с основанием base
-int has_finite_representation(long double number, int base) {
-    // Шаг 1: Преобразуем дробь в несократимую форму
-    long double fraction = number;
-    
-    // Пытаемся избавиться от дробной части
-    while (fraction != floorl(fraction)) {
-        fraction *= base;
+int has_finite_representation(int base, int num_fractions, ...) {
+    if (base < 2 || base > 36) {
+        return INVALID_ARGUMENT; 
     }
 
-    // Шаг 2: Проверка остатков после деления
-    while (fmodl(fraction, base) == 0) {
-        fraction /= base;
+    va_list args;
+    va_start(args, num_fractions);
+
+    for (int i = 0; i < num_fractions; i++) {
+        double fraction = va_arg(args, double);
+        if (fraction <= 0 || fraction >= 1) {
+            continue;
+        }
+
+        int numerator = (int)(fraction * base);
+        int denominator = base;
+
+        while (denominator % 2 == 0) {
+            denominator /= 2;
+        }
+        while (denominator % 5 == 0) {
+            denominator /= 5;
+        }
+
+        if (denominator == 1) {
+            printf("Fraction %.2f has a finite representation in base %d.\n", fraction, base);
+        } else {
+            printf("Fraction %.2f does not have a finite representation in base %d.\n", fraction, base);
+        }
     }
 
-    // Если в итоге осталось 1, то представление конечно
-    return (fraction == 1.0);
-}
-
-
-int main() {
-    long double number = 0.5;
-    int base;
-    
-    base = 2;
-    int result = has_finite_representation(number, base);
-    if (result) {
-        printf("Число имеет конечное представление в системе счисления с основанием %d\n", base);
-    } else {
-        printf("Число не имеет конечного представления в системе счисления с основанием %d\n", base);
-    }
-
-    return 0;
+    va_end(args);
+    return SUCCESS;
 }

@@ -29,7 +29,7 @@ FAILED_IFILE_RFILE_OFILE=$(BASH) $(TEST_TEMPLATES_DIR)/failed_ifile_rfile_ofile
 .PHONY: all clean
 
 all:
-	for dir in Lab2_2; do \
+	for dir in Lab2_1 Lab2_2 Lab2_3 Lab2_4 Lab2_5 Lab2_7 Lab2_8 Lab2_9; do \
 		cd $$dir ;\
 		make ;\
 		mv *.a .. ;\
@@ -101,36 +101,32 @@ clean: # Чтобы удалить все исполняемые файлы на
 
 #test_task_1: test_command_args_1 
 
-$(LABS):
-	$(MAKE) -C $@ &  # Запускаем сборку в фоновом режиме
-	@echo "Сборка $@ началась"
-
 # Правило для тестирования
 test: $(TEST_TARGETS)
 	@echo "Все тесты прошли успешно"
 
 test_task1_command_args_1:
-	@$(FAILED_CMD) "Lab2_1/1.a" 2 "Ввод: <флаг> <строка>"
+	@$(FAILED_CMD) "1.a" 2 "Ввод: <флаг> <строка>"
 	@echo "TEST 1 PASSED"
 
 test_task1_lflag_2:
-	@$(SUCCESS_CMD) "Lab2_1/1.a -l HelloWorld" "Длина: 10"
+	@$(SUCCESS_CMD) "1.a -l HelloWorld" "Длина: 10"
 	@echo "TEST 2 L-FLAG PASSED"
 
 test_task1_rflag_3:
-	@$(SUCCESS_CMD) "Lab2_1/1.a -r HelloWorld" "Реверс: dlroWolleH"
+	@$(SUCCESS_CMD) "1.a -r HelloWorld" "Реверс: dlroWolleH"
 	@echo "TEST 3 R-FLAG PASSED"
 
 test_task1_uflag_4:
-	@$(SUCCESS_CMD) "Lab2_1/1.a -u HelloWorld" "Верхний регистр на нечётных позициях: HElLoWoRlD"
+	@$(SUCCESS_CMD) "1.a -u HelloWorld" "Верхний регистр на нечётных позициях: HElLoWoRlD"
 	@echo "TEST 4 U-FLAG PASSED"
 
 test_task1_nflag_5:
-	@$(SUCCESS_CMD) "Lab2_1/1.a -n H3ll0 W0rld!" "Отсортировано: 30Hll"
+	@$(SUCCESS_CMD) "1.a -n H3ll0 W0rld!" "Отсортировано: 30Hll"
 	@echo "TEST 5 N-FLAG PASSED"
 
 test_task1_cflag_6:
-	@$(SUCCESS_CMD) "Lab2_1/1.a -c 1 2 3 4 5 6" "Конкатенация: 23465"
+	@$(SUCCESS_CMD) "1.a -c 1 2 3 4 5 6" "Конкатенация: 23465"
 	@echo "TEST 6 C-FLAG PASSED"
 
 
@@ -141,22 +137,22 @@ test_task_1: test_task1_command_args_1 test_task1_lflag_2 test_task1_rflag_3 tes
 #------------------------------------------------------------------------
 
 test_task3_1:
-	@$(SUCCESS_IFILE_OFILE) "Lab2_3/3.a" "test_files/task_3_test_1_input" "test_files/task_3_test_1_output"
+	@$(SUCCESS_IFILE_OFILE) "3.a" "test_files/task_3_test_1_input" "test_files/task_3_test_1_output"
 	@echo "TEST 9(task_3 sss) PASSED"
 
 
 test_task3_2:
-	@$(SUCCESS_IFILE_OFILE) "Lab2_3/3.a" "test_files/task_3_test_2_input" "test_files/task_3_test_2_output"
+	@$(SUCCESS_IFILE_OFILE) "3.a" "test_files/task_3_test_2_input" "test_files/task_3_test_2_output"
 	@echo "TEST 10 PASSED"
 
 test_task3_3:
-	@$(SUCCESS_IFILE_OFILE) "Lab2_3/3.a" "test_files/task_3_test_3_input" "test_files/task_3_test_3_output"
+	@$(SUCCESS_IFILE_OFILE) "3.a" "test_files/task_3_test_3_input" "test_files/task_3_test_3_output"
 	@echo "TEST 11 PASSED"
 
 test_task_3: test_task3_1 test_task3_2 test_task3_3
 	@echo "ALL TESTS TASK 3 PASSED"
 
-test_task_allWithOut13:
+test_task_allWithOut12:
 	@./2.a
 	@./4.a
 	@./5.a
@@ -165,7 +161,7 @@ test_task_allWithOut13:
 	@./9.a
 
 
-test: test_task_1 test_task_3 test_task_allWithOut13
+test: test_task_1 test_task_3 test_task_allWithOut12
 
 
 #------------------------------------------------------------------------

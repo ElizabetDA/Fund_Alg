@@ -8,14 +8,13 @@ typedef enum {
     ERROR_ALL_ZERO
 } Status;
 
-// Функция для поиска подстроки в строке (посимвольное сравнение)
 int Find_substring(const char *line, const char *substring, int *position) {
     int line_len = 0, sub_len = 0;
-    while (line[line_len] != '\0') line_len++;  // Вычисляем длину строки
-    while (substring[sub_len] != '\0') sub_len++;  // Длина подстроки
+    while (line[line_len] != '\0') line_len++; 
+    while (substring[sub_len] != '\0') sub_len++;
 
     if (sub_len == 0) {
-        return SUCCESS; // Пустая подстрока
+        return SUCCESS; 
     }
 
     for (int i = *position; i <= line_len - sub_len; i++) {
@@ -28,13 +27,12 @@ int Find_substring(const char *line, const char *substring, int *position) {
         }
         if (match) {
             *position = i;
-            return ERROR_SUBSTRING_FOUND; // Найдена подстрока
+            return ERROR_SUBSTRING_FOUND;
         }
     }
-    return SUCCESS; // Подстрока не найдена
+    return SUCCESS;
 }
 
-// Функция для обработки каждого файла
 int Process_file(const char *filepath, const char *substring) {
     FILE *file = fopen(filepath, "r");
     if (file == NULL) {
@@ -45,13 +43,12 @@ int Process_file(const char *filepath, const char *substring) {
     char line[1024];
     int line_number = 1;
 
-    // Чтение файла построчно
     while (fgets(line, sizeof(line), file) != NULL) {
         int position = 0;
 
         while (Find_substring(line, substring, &position) == ERROR_SUBSTRING_FOUND) {
             printf("Файл: %s, Строка: %d, Позиция: %d\n", filepath, line_number, position + 1);
-            position++;  // Смещаем позицию для следующего поиска
+            position++;
         }
 
         line_number++;
@@ -61,7 +58,6 @@ int Process_file(const char *filepath, const char *substring) {
     return SUCCESS;
 }
 
-// Основная функция для поиска подстроки в нескольких файлах
 int Find_in_files(const char *substring, int file_count, const char *filepaths[]) {
     if (substring == NULL || substring[0] == '\0') {
         printf("Всё по нулям\n");
@@ -71,7 +67,7 @@ int Find_in_files(const char *substring, int file_count, const char *filepaths[]
     for (int i = 0; i < file_count; i++) {
         int status = Process_file(filepaths[i], substring);
         if (status != SUCCESS) {
-            return status; // Возвращаем ошибку при открытии файла
+            return status;
         }
     }
 
@@ -79,26 +75,22 @@ int Find_in_files(const char *substring, int file_count, const char *filepaths[]
 }
 
 int main() {
-    char substring[256]; // Массив для хранения подстроки
+    char substring[256];
     int file_count;
 
-    // Ввод подстроки
     printf("Введите подстроку для поиска: ");
-    scanf("%255s", substring); // Чтение строки, ограничивая длину
+    scanf("%255s", substring);
     printf("\n");
 
-    // Ввод количества файлов
     printf("Введите количество файлов: ");
-    scanf("%d", &file_count); // Чтение количества файлов
+    scanf("%d", &file_count);
     printf("\n");
 
-    // Проверка корректности введённого количества файлов
     if (file_count <= 0) {
         printf("Количество файлов должно быть больше нуля.\n");
         return ERROR_ALL_ZERO;
     }
 
-    // Массив для хранения имен файлов
     char **files = malloc(file_count * sizeof(char *));
     if (files == NULL) {
         printf("Ошибка выделения памяти.\n");
@@ -124,7 +116,6 @@ int main() {
         return status;
     }
 
-    // Освобождение памяти
     for (int i = 0; i < file_count; ++i) {
         free(files[i]);
     }

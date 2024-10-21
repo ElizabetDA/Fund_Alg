@@ -1,45 +1,115 @@
-#include <stdio.h>
 #include <stdarg.h>
+#include <stdio.h>
 #include <stdlib.h>
-#include <math.h>
+#include "test_func.h"
 
-typedef enum {
-    SUCCESS = 0,
-    ERROR_NOT_CONVEX,
-    ERROR_INVALID_VERTEX_COUNT,
-    ERROR_INVALID_SYMBOL
-} Status;
-
-int orientation(double x1, double y1, double x2, double y2, double x3, double y3) {
-    double val = (y2 - y1) * (x3 - x2) - (x2 - x1) * (y3 - y2); 
-    if (val > 0) return 1;
-    if (val < 0) return -1;
-    return 0;
+size_t my_strlen(const char *str) {
+    const char *s = str;
+    while (*s) {
+        s++;
+    }
+    return s - str;
 }
 
-Status is_convex_polygon(int n, const double* coords) {
-    if (n < 2) {
-        return ERROR_INVALID_VERTEX_COUNT;
+long long my_strtoll(const char *nptr, char **endptr, int base) {
+    const char *s = nptr;
+    long long result = 0;
+    int sign = 1;
+
+   while (*s == ' ') {
+        s++;
     }
 
-    double x1 = coords[0];
-    double y1 = coords[1];
-    double x2 = coords[2];
-    double y2 = coords[3];
-    double x3, y3;
-    int prev_orientation = 0;
+    if (*s == '-') {
+        sign = -1;
+        s++;
+    } else if (*s == '+') {
+        s++;
+    }
 
-    for (int i = 2; i < n; i++) {
-        x3 = coords[2 * i];
-        y3 = coords[2 * i + 1];
-
-        int current_orientation = orientation(x1, y1, x2, y2, x3, y3);
-        if (current_orientation != 0) {
-            if (prev_orientation == 0) {
-                prev_orientation = current_orientation;
-            } else if (current_orientation != prev_orientation) {
-                return ERROR_NOT_CONVEX;
+    // Если база 0, устанавливаем ее в 10, если строка начинается с "0x" или "0X", устанавливаем в 16
+    if (base == 0) {
+        if (*s == '0') {
+            s++;
+            if (*s == 'x' || *s == 'X') {
+                base = 16;
+                s++;
+            } else {
+                base = 8;
             }
+        } else {
+            base = 10;
+        }
+    }
+
+    // Проверка на допустимую базу
+    if (base < 2 || base > 36) {
+        if (endptr) *endptr = (char *)nptr; // Устанавливаем указатель на начало
+        return 0;
+    }
+
+    // Преобразование строки в число
+    while (*s) {
+        int digit = 0;
+
+        if (*s >= '0' && *s <= '9') {
+            digit = *s - '0';
+        } else if (*s >= 'a' && *s <= 'z') {
+            digit = *s - 'a' + 10;
+        } else if (*s >= 'A' && *s <= 'Z') {
+            digit = *s - 'A' + 10;
+        } else {
+            break; // Прекращаем, если символ не допустимый
+        }
+
+        if (digit >= base) {
+            break; // Прекращаем, если цифра больше базы
+        }
+
+        result = result * base + digit;
+        s++;
+    }
+
+    // Устанавливаем указатель на конец преобразованной строки
+    if (endptr) {
+        *endptr = (char *)s;
+    }
+
+    return result * sign;
+}
+
+int is_convex_polygon(double epsilon, int num_points, ...) {
+    if (num_points < 3) {
+        return INVALID_ARGUMENT;  // Многоугольник должен иметь хотя бы 3 вершины
+    }
+
+    va_list args;
+    va_start(args, num_points);
+    
+    double x1 = va_arg(args, double);
+    double y1 = va_arg(args, double);
+    double x2 = va_arg(args, double);
+    double y2 = va_arg(args, double);
+    int sign = 0;
+
+    for (int i = 2; i < num_points; i++) {
+        double x3 = va_arg(args, double);
+        double y3 = va_arg(args, double);
+
+        double cross_product = (x2 - x1) * (y3 - y2) - (y2 - y1) * (x3 - x2);
+
+        if (cross_product < -epsilon) {
+            if (sign == 1) {
+                va_end(args);
+                return CONVEX;
+            }
+            sign = -1;
+        } else if (cross_product > epsilon) {
+            if (sign == -1) {
+                va_end(args);
+                return CONVEX;
+            }
+            sign = 1;
         }
 
         x1 = x2;
@@ -48,145 +118,59 @@ Status is_convex_polygon(int n, const double* coords) {
         y2 = y3;
     }
 
-    return SUCCESS;
+    va_end(args);
+    return NOT_CONVEX;
 }
 
-double evaluate_polynomial(double x, int degree, const double* coeffs) {
-    double result = 0.0;
-    for (int i = 0; i <= degree; i++) {
-        result += coeffs[i] * pow(x, degree - i);
+double evaluate_polynomial(double epsilon, double x, int degree, ...) {
+    if (degree < 0) {
+        return INVALID_ARGUMENT;  // Степень многочлена не может быть отрицательной
     }
+
+    va_list args;
+    va_start(args, degree);
+    
+    double result = va_arg(args, double);  // Коэффициент при старшей степени
+    for (int i = 1; i <= degree; i++) {
+        double coeff = va_arg(args, double);
+        result = result * x + coeff;
+    }
+
+    va_end(args);
+    
     return result;
 }
 
-long long int str_to_int_base(const char *str, int base) {
-    long long int result = 0;
-    while (*str) {
-        int digit = *str - '0';
-        if (digit >= 0 && digit < base) {
-            result = result * base + digit;
-        } else {
-            return ERROR_INVALID_SYMBOL;
+int is_kaprekar_number_in_base(int base, int num_strings, ...) {
+    if (base < 2 || base > 36) {
+        return INVALID_ARGUMENT; 
+    }
+
+    va_list args;
+    va_start(args, num_strings);
+
+    for (int i = 0; i < num_strings; i++) {
+        const char* number_str = va_arg(args, const char*);
+        char* end_ptr;
+        long long number = my_strtoll(number_str, &end_ptr, base);
+
+        if (*end_ptr != '\0') {
+            continue;  // Неверное строковое представление числа
         }
-        str++;
-    }
-    return result;
-}
 
-int is_kaprekar(long long int n) {
-    long long int square = n * n;
-    long long int divider = 1;
-    while (divider <= n) {
-        divider *= 10;
-    }
-    long long int left_part = square / divider;
-    long long int right_part = square % divider;
-    return (left_part + right_part == n);
-}
+        long long square = number * number;
+        char square_str[64];    
+        snprintf(square_str, sizeof(square_str), "%lld", square);
 
-int main() {
-    int vertex_count;
-    printf("Часть 1: Проверка выпуклости многоугольника\n");
-    if (scanf("%d", &vertex_count) != 1 && vertex_count < 2) {
-        printf("Ошибка: недостаточное количество вершин для мн  огоугольника\n");
-        return 1;
-    }
+        int len = my_strlen(square_str);
+        long long right_part = my_strtoll(square_str + len / 2, NULL, base);
+        long long left_part = len > 1 ? my_strtoll(square_str, NULL, base) : 0;
 
-    double* coords = (double*)malloc(vertex_count * 2 * sizeof(double));
-    if (coords == NULL) {
-        printf("Ошибка: не удалось выделить память\n");
-        return 1;
-    }
-
-    for (int i = 0; i < (vertex_count * 2); i++) {
-        if (scanf("%lf", &coords[i]) != 1) {
-            printf("Ошибка: неверный ввод координат\n");
-            free(coords);
-            return 1;
+        if (left_part + right_part == number) {
+            printf("%s является числом Капрекара в системе счисления с основанием %d\n", number_str, base);
         }
     }
 
-    Status polygon_status = is_convex_polygon(vertex_count, coords);
-    if (polygon_status == SUCCESS) {
-        printf("Многоугольник выпуклый\n");
-    } else if (polygon_status == ERROR_NOT_CONVEX) {
-        printf("Многоугольник не выпуклый\n");
-    } else if (polygon_status == ERROR_INVALID_VERTEX_COUNT) {
-        printf("Ошибка: недостаточное количество вершин для многоугольника\n");
-    }
-
-    printf("\nЧасть 2: Вычисление значения многочлена\n");
-    int degree;
-    if (scanf("%d", &degree) != 1 && degree < 0) {
-        printf("Ошибка: некорректная степень многочлена\n");
-        free(coords);
-        return 1;
-    }
-
-    double* coeffs = (double*)malloc((degree + 1) * sizeof(double));
-    if (coeffs == NULL) {
-        printf("Ошибка: не удалось выделить память\n");
-        free(coords);
-        return 1;
-    }
-
-    for (int i = 0; i <= degree; i++) {     
-        if (scanf("%lf", &coeffs[i]) != 1) {
-            printf("Ошибка: неверный ввод коэффициентов\n");
-            free(coords);
-            free(coeffs);
-            return 1;
-        }
-    }
-
-    double x;
-    if (scanf("%lf", &x) != 1) {
-        printf("Ошибка: неверный ввод значения x\n");
-        free(coords);
-        free(coeffs);
-        return 1;
-    }
-
-    double poly_result = evaluate_polynomial(x, degree, coeffs);
-    printf("Значение многочлена в точке: %lf\n", poly_result);
-
-    printf("\nЧасть 3: Проверка чисел Капрекара\n");
-    int base;
-    int count;
-    if (scanf("%d", &base) != 1 || scanf("%d", &count) != 1 || base < 2 || count < 1) {
-        printf("Ошибка: неверное основание или количество чисел\n");
-        free(coords);
-        free(coeffs);
-        return 1;
-    }
-
-    for (int i = 0; i < count; i++) {
-        char num_str[100];
-        if (scanf("%s", num_str) != 1) {
-            printf("Ошибка: неверный ввод числа\n");
-            free(coords);
-            free(coeffs);
-            return 1;
-        }
-
-        long long int num = str_to_int_base(num_str, base);
-        if (num == ERROR_INVALID_SYMBOL) {
-            printf("Ошибка: неверный формат числа %s в системе с основанием %d\n", num_str, base);
-            continue;
-        }
-
-        if (is_kaprekar(num)) {
-            printf("Число %lld (в исходной системе счисления: %s) является числом Капрекара\n", num, num_str);
-        } else {
-            printf("Число %lld (в исходной системе счисления: %s) не является числом Капрекара\n", num, num_str);
-        }
-    }
-
-    free(coords);
-    free(coeffs);
+    va_end(args);
     return 0;
 }
-
-/* 5
-0.0 0.0 4.0 0.0 2.0 2.0 4.0 4.0 0.0 4.0
-*/
