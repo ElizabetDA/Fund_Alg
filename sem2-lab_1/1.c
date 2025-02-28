@@ -240,8 +240,8 @@ void session(UserDatabase* db, const User* currentUser) {
             continue;
         }
 
-        if (strcmp(input, "1") == 0) printf("Текущее время: 12:34:56\n");
-        else if (strcmp(input, "2") == 0) printf("Текущая дата: 28.02.2025\n");
+        if (strcmp(input, "1") == 0) processTime();
+        else if (strcmp(input, "2") == 0) processDate();
         else if (strcmp(input, "3") == 0) processHowmuch();
         else if (strcmp(input, "4") == 0) processSanctions(db);
         else printf("Ошибка: Неизвестная команда.\n");
