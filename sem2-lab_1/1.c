@@ -2,22 +2,11 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include "utility.h"
 
-#define MAX_LOGIN_LENGTH 6
-#define MAX_USERS 100
-#define SANCTION_CODE "12345"
-
-typedef struct {
-    char login[MAX_LOGIN_LENGTH + 1];
-    long int pin;
-    int sanctionLimit;
-} User;
-
-typedef struct {
-    User* users[MAX_USERS];
-    int count;
-    char dbFilePath[256];
-} UserDatabase;
+void printMessage(const char *message) {
+    printf("%s\n", message);
+}
 
 void initDatabase(UserDatabase* db, const char* filePath) {
     memset(db, 0, sizeof(UserDatabase));
@@ -72,13 +61,13 @@ User* findUser(const UserDatabase* db, const char *login) {
 
 int registerUser(UserDatabase* db, const char *login, long int pin) {
     if (db->count >= MAX_USERS) {
-        printf("Достигнуто максимальное количество пользователей.\n");
+        printMessage(errorMessages[0].message);
         return 0;
     }
 
     User *newUser = malloc(sizeof(User));
     if (!newUser) {
-        printf("Ошибка выделения памяти.\n");
+        printMessage(errorMessages[1].message);
         return 0;
     }
 
@@ -89,24 +78,22 @@ int registerUser(UserDatabase* db, const char *login, long int pin) {
 
     db->users[db->count++] = newUser;
     saveUsers(db);
+    printMessage(successMessages[0].message);
     return 1;
 }
 
 void showCommands() {
-    printf("\nДоступные команды:\n");
-    printf("  1. Time         - показать текущее время\n");
-    printf("  2. Date         - показать текущую дату\n");
-    printf("  3. Howmuch      - сколько времени прошло с даты\n");
-    printf("  4. Sanctions    - наложить санкции на пользователя\n");
-    printf("  5. Logout       - выйти из системы\n");
+    printf("\nAvailable commands:\n");
+    for (int i = 0; i < sizeof(commandDescriptions) / sizeof(CommandDescription); i++) {
+        printf("  %d. %s - %s\n", i + 1, commandDescriptions[i].command, commandDescriptions[i].description);
+    }
 }
 
 void processTime() {
     time_t t = time(NULL);
     struct tm *tm_info = localtime(&t);
     if (tm_info) {
-        printf("Текущее время: %02d:%02d:%02d\n",
-               tm_info->tm_hour, tm_info->tm_min, tm_info->tm_sec);
+        printf("Current time: %02d:%02d:%02d\n", tm_info->tm_hour, tm_info->tm_min, tm_info->tm_sec);
     }
 }
 
@@ -114,14 +101,13 @@ void processDate() {
     time_t t = time(NULL);
     struct tm *tm_info = localtime(&t);
     if (tm_info) {
-        printf("Текущая дата: %02d.%02d.%04d\n",
-               tm_info->tm_mday, tm_info->tm_mon + 1, tm_info->tm_year + 1900);
+        printf("Current date: %02d.%02d.%04d\n", tm_info->tm_mday, tm_info->tm_mon + 1, tm_info->tm_year + 1900);
     }
 }
 
-void processHowmuch() {
+void processHowMuch() {
     char dateStr[16], flag[4];
-    printf("Введите дату (дд.мм.гггг): ");
+    printf("%s", userPrompts[0].prompt);
     if (!fgets(dateStr, sizeof(dateStr), stdin)) return;
     dateStr[strcspn(dateStr, "\n")] = '\0';
 
@@ -129,7 +115,7 @@ void processHowmuch() {
     char *endptr;
     long val = strtol(token, &endptr, 10);
     if (!token || *endptr != '\0' || val < 1 || val > 31) {
-        printf("Ошибка: Неверный день.\n");
+        printMessage(errorMessages[2].message);
         return;
     }
     int day = (int)val;
@@ -137,7 +123,7 @@ void processHowmuch() {
     token = strtok(NULL, ".");
     val = strtol(token, &endptr, 10);
     if (!token || *endptr != '\0' || val < 1 || val > 12) {
-        printf("Ошибка: Неверный месяц.\n");
+        printMessage(errorMessages[3].message);
         return;
     }
     int month = (int)val;
@@ -145,7 +131,7 @@ void processHowmuch() {
     token = strtok(NULL, ".");
     val = strtol(token, &endptr, 10);
     if (!token || *endptr != '\0' || val < 1900 || val > 9999) {
-        printf("Ошибка: Неверный год.\n");
+        printMessage(errorMessages[4].message);
         return;
     }
     int year = (int)val;
@@ -158,67 +144,65 @@ void processHowmuch() {
 
     time_t input_time = mktime(&input_tm);
     if (input_time == -1) {
-        printf("Ошибка обработки даты.\n");
+        printMessage(errorMessages[5].message);
         return;
     }
 
-    printf("Выберите флаг (-s, -m, -h, -y): ");
+    printf("%s", userPrompts[1].prompt);
     if (!fgets(flag, sizeof(flag), stdin)) return;
     flag[strcspn(flag, "\n")] = '\0';
 
     time_t now = time(NULL);
     double diff = difftime(now, input_time);
     if (diff < 0) {
-        printf("Ошибка: Указанная дата в будущем.\n");
+        printMessage(errorMessages[6].message);
         return;
     }
 
-    if (strcmp(flag, "-s") == 0) printf("Прошло: %.0f секунд\n", diff);
-    else if (strcmp(flag, "-m") == 0) printf("Прошло: %.0f минут\n", diff / 60);
-    else if (strcmp(flag, "-h") == 0) printf("Прошло: %.0f часов\n", diff / 3600);
-    else if (strcmp(flag, "-y") == 0) printf("Прошло: %.2f лет\n", diff / (3600 * 24 * 365.25));
-    else printf("Ошибка: Неверный флаг (-s, -m, -h или -y)\n");
+    if (strcmp(flag, "-s") == 0) printf("Elapsed: %.0f seconds\n", diff);
+    else if (strcmp(flag, "-m") == 0) printf("Elapsed: %.0f minutes\n", diff / 60);
+    else if (strcmp(flag, "-h") == 0) printf("Elapsed: %.0f hours\n", diff / 3600);
+    else if (strcmp(flag, "-y") == 0) printf("Elapsed: %.2f years\n", diff / (3600 * 24 * 365.25));
+    else printMessage(errorMessages[7].message);
 }
 
 void processSanctions(UserDatabase* db) {
     char targetLogin[MAX_LOGIN_LENGTH + 1];
-    printf("Введите логин пользователя, на которого наложить санкции: ");
+    printf("%s", userPrompts[2].prompt);
     if (!fgets(targetLogin, sizeof(targetLogin), stdin)) return;
     targetLogin[strcspn(targetLogin, "\n")] = '\0';
 
     User *targetUser = findUser(db, targetLogin);
     if (!targetUser) {
-        printf("Ошибка: Пользователь \"%s\" не найден.\n", targetLogin);
+        printMessage(errorMessages[8].message);
         return;
     }
 
     char limitStr[10];
-    printf("Введите лимит команд: ");
+    printf("%s", userPrompts[3].prompt);
     if (!fgets(limitStr, sizeof(limitStr), stdin)) return;
     limitStr[strcspn(limitStr, "\n")] = '\0';
 
     char *endptr;
     long limit = strtol(limitStr, &endptr, 10);
     if (*endptr != '\0' || limit <= 0) {
-        printf("Ошибка: Некорректное значение лимита.\n");
+        printMessage(errorMessages[9].message);
         return;
     }
 
-    printf("Подтвердите санкции, введя код: ");
+    printf("%s", userPrompts[4].prompt);
     char confirm[10];
     if (!fgets(confirm, sizeof(confirm), stdin)) return;
     confirm[strcspn(confirm, "\n")] = '\0';
     if (strcmp(confirm, SANCTION_CODE) != 0) {
-        printf("Ошибка: Неверный код подтверждения.\n");
+        printMessage(errorMessages[10].message);
         return;
     }
 
     targetUser->sanctionLimit = (int)limit;
     saveUsers(db);
-    printf("Санкции установлены: %s теперь может выполнить максимум %d команд в сессии.\n",
-           targetUser->login, targetUser->sanctionLimit);
+    printMessage(successMessages[1].message);
 }
-
 
 void session(UserDatabase* db, const User* currentUser) {
     char input[10];
@@ -226,25 +210,25 @@ void session(UserDatabase* db, const User* currentUser) {
 
     while (1) {
         showCommands();
-        printf("\nВыберите номер команды (1-5): ");
+        printf("\nChoose command number (1-5): ");
         if (!fgets(input, sizeof(input), stdin)) continue;
         input[strcspn(input, "\n")] = '\0';
 
         if (strcmp(input, "5") == 0) {
-            printf("Выход из системы.\n");
+            printMessage(successMessages[2].message);
             return;
         }
 
         if (currentUser->sanctionLimit > 0 && sessionCommandCount >= currentUser->sanctionLimit) {
-            printf("Превышен лимит команд. Доступна только команда Logout.\n");
+            printMessage(successMessages[3].message);
             continue;
         }
 
         if (strcmp(input, "1") == 0) processTime();
         else if (strcmp(input, "2") == 0) processDate();
-        else if (strcmp(input, "3") == 0) processHowmuch();
+        else if (strcmp(input, "3") == 0) processHowMuch();
         else if (strcmp(input, "4") == 0) processSanctions(db);
-        else printf("Ошибка: Неизвестная команда.\n");
+        else printMessage(errorMessages[11].message);
 
         sessionCommandCount++;
     }
@@ -254,7 +238,7 @@ void authMenu(UserDatabase* db) {
     loadUsers(db);
 
     while (1) {
-        printf("\n1. Вход\n2. Регистрация\n3. Выход\nВыберите: ");
+        printf("\n1. Login\n2. Register\n3. Exit\nChoose: ");
         char choiceStr[10];
         if (!fgets(choiceStr, sizeof(choiceStr), stdin)) continue;
         choiceStr[strcspn(choiceStr, "\n")] = '\0';
@@ -262,20 +246,20 @@ void authMenu(UserDatabase* db) {
         char *endptr;
         long choice = strtol(choiceStr, &endptr, 10);
         if (*endptr != '\0' || choice < 1 || choice > 3) {
-            printf("Ошибка ввода. Введите число от 1 до 3.\n");
+            printMessage(errorMessages[12].message);
             continue;
         }
         if (choice == 3) {
-            printf("Выход из программы.\n");
+            printMessage(successMessages[4].message);
             break;
         }
 
         char login[MAX_LOGIN_LENGTH + 2];
-        printf("Логин (до %d символов): ", MAX_LOGIN_LENGTH);
+        printf("%s", userPrompts[5].prompt);
         if (!fgets(login, sizeof(login), stdin)) continue;
         login[strcspn(login, "\n")] = '\0';
 
-        printf("PIN (0-100000): ");
+        printf("%s", userPrompts[6].prompt);
         char pinStr[10];
         if (!fgets(pinStr, sizeof(pinStr), stdin)) continue;
         pinStr[strcspn(pinStr, "\n")] = '\0';
@@ -283,26 +267,24 @@ void authMenu(UserDatabase* db) {
         char *pinEndPtr;
         long pin = strtol(pinStr, &pinEndPtr, 10);
         if (*pinEndPtr != '\0' || pin < 0 || pin > 100000) {
-            printf("Ошибка: Некорректный PIN.\n");
+            printMessage(errorMessages[13].message);
             continue;
         }
 
         if (choice == 1) {
             User *user = findUser(db, login);
             if (!user || user->pin != pin) {
-                printf("Неверный логин или PIN!\n");
+                printMessage(errorMessages[15].message);
                 continue;
             }
-            printf("Добро пожаловать, %s!\n", user->login);
+            printMessage(successMessages[5].message);
             session(db, user);
-        }
-        else {
+        } else {
             if (findUser(db, login)) {
-                printf("Логин уже занят!\n");
+                printMessage(errorMessages[14].message);
                 continue;
             }
             if (registerUser(db, login, pin)) {
-                printf("Регистрация успешна!\n");
                 session(db, db->users[db->count - 1]);
             }
         }
