@@ -4,7 +4,6 @@
 #include <string.h>
 #include <unistd.h>
 #include <sys/wait.h>
-#include <fcntl.h>
 #include <stdint.h>
 
 // Макрос для вычисления размера блока 2^N
@@ -104,7 +103,7 @@ void copyN_operation(int file_count, char *files[], int N) {
 }
 
 // Реализация операции find
-void find_operation(int file_count, char *files[], char *search_string) {
+void find_operation(int file_count, char *files[], const char *search_string) {
     int found = 0;
 
     for (int i = 0; i < file_count; i++) {
