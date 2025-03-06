@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include "file_operations.h"
 
-// Тест для операции xorN
+//для операции xorN
 void test_xorN_operation() {
 	char *files[] = {"test_files/test1.txt", "test_files/test2.txt"};
 	printf("Testing xorN_operation...\n");
@@ -9,7 +9,7 @@ void test_xorN_operation() {
 	printf("xorN_operation test passed.\n");
 }
 
-// Тест для операции mask
+//для операции mask
 void test_mask_operation() {
 	char *files[] = {"test_files/test1.txt", "test_files/test2.txt"};
 	printf("Testing mask_operation...\n");
@@ -17,7 +17,7 @@ void test_mask_operation() {
 	printf("mask_operation test passed.\n");
 }
 
-// Тест для операции copyN
+//для операции copyN
 void test_copyN_operation() {
 	char *files[] = {"test_files/test1.txt"};
 	printf("Testing copyN_operation...\n");
@@ -25,7 +25,7 @@ void test_copyN_operation() {
 	printf("copyN_operation test passed.\n");
 }
 
-// Тест для операции find
+// для операции find
 void test_find_operation() {
 	char *files[] = {"test_files/test1.txt", "test_files/test2.txt"};
 	printf("Testing find_operation...\n");
@@ -33,7 +33,6 @@ void test_find_operation() {
 	printf("find_operation test passed.\n");
 }
 
-// Основная функция для запуска тестов
 int main() {
 	printf("Running tests...\n");
 

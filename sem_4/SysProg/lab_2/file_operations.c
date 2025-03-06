@@ -6,10 +6,8 @@
 #include <sys/wait.h>
 #include <stdint.h>
 
-// Макрос для вычисления размера блока 2^N
 #define BLOCK_SIZE_2N(N) (1 << (N))
 
-// Реализация операции xorN
 void xorN_operation(int file_count, char *files[], int N) {
     size_t block_size = BLOCK_SIZE_2N(N); // Размер блока: 2^N
     uint8_t *block = malloc(block_size);
@@ -32,7 +30,6 @@ void xorN_operation(int file_count, char *files[], int N) {
             for (size_t j = 0; j < bytes_read; j++) {
                 block[j] ^= 0xFF; // Пример XOR с 0xFF
             }
-            // Вывод результата
             fwrite(block, 1, bytes_read, stdout);
         }
 
@@ -42,7 +39,6 @@ void xorN_operation(int file_count, char *files[], int N) {
     free(block);
 }
 
-// Реализация операции mask
 void mask_operation(int file_count, char *files[], uint32_t mask) {
     uint32_t value;
     int count = 0;
@@ -66,7 +62,6 @@ void mask_operation(int file_count, char *files[], uint32_t mask) {
     printf("Count of matching values: %d\n", count);
 }
 
-// Реализация операции copyN
 void copyN_operation(int file_count, char *files[], int N) {
     for (int i = 0; i < file_count; i++) {
         for (int j = 0; j < N; j++) {
@@ -95,14 +90,12 @@ void copyN_operation(int file_count, char *files[], int N) {
             }
         }
 
-        // Ожидание завершения всех дочерних процессов
         for (int j = 0; j < N; j++) {
             wait(NULL);
         }
     }
 }
 
-// Реализация операции find
 void find_operation(int file_count, char *files[], const char *search_string) {
     int found = 0;
 
@@ -132,7 +125,6 @@ void find_operation(int file_count, char *files[], const char *search_string) {
         }
     }
 
-    // Ожидание завершения всех дочерних процессов
     for (int i = 0; i < file_count; i++) {
         int status;
         wait(&status);
