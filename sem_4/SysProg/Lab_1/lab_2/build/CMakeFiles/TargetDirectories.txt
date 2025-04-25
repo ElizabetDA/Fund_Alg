@@ -1,0 +1,3 @@
+/home/elizabet/CLionProjects/Fund_Alg/sem_4/SysProg/lab_2/build/CMakeFiles/file_processor.dir
+/home/elizabet/CLionProjects/Fund_Alg/sem_4/SysProg/lab_2/build/CMakeFiles/edit_cache.dir
+/home/elizabet/CLionProjects/Fund_Alg/sem_4/SysProg/lab_2/build/CMakeFiles/rebuild_cache.dir
