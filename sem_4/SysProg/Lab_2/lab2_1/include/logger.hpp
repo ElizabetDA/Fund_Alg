@@ -39,11 +39,11 @@ public:
     class Builder;
 
     void log(Level level, const std::string& message);
-    void addHandler(std::unique_ptr<LogHandler> handler);
     void close();
 
 private:
-    explicit Logger(std::string name, Level level);
+    Logger(std::string name, Level level, std::vector<std::unique_ptr<LogHandler>> handlers);
+
     std::string logger_name_;
     Level log_level_;
     std::vector<std::unique_ptr<LogHandler>> handlers_;
@@ -54,10 +54,15 @@ private:
 using LoggerBuilder = Logger::Builder;
 
 class Logger::Builder {
-    std::string name_;
+    std::string name_ = "default";
     Level level_ = Level::DEBUG;
+    std::vector<std::unique_ptr<LogHandler>> handlers_;
+
 public:
-    explicit Builder(std::string name);
+    Builder() = default;
+
+    Builder& setName(const std::string& name);
     Builder& setLevel(Level level);
+    Builder& addHandler(std::unique_ptr<LogHandler> handler);
     Logger* build();
 };
