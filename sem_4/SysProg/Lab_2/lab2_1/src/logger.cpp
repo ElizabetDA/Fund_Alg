@@ -3,14 +3,16 @@
 #include <iomanip>
 #include <sstream>
 
+// --- StreamLoggerHandler ---
 StreamLoggerHandler::StreamLoggerHandler(std::ostream& stream) : stream_(stream) {}
 void StreamLoggerHandler::write(const std::string& msg) {
     stream_ << msg << std::endl;
 }
 
+// --- FileLoggerHandler ---
 FileLoggerHandler::FileLoggerHandler(const std::string& filename) {
     file_.open(filename, std::ios::app);
-    if (!file_) throw std::runtime_error("Cannot open log file: " + filename);
+    if (!file_) throw std::runtime_error("Cannot open file: " + filename);
 }
 void FileLoggerHandler::write(const std::string& msg) {
     if (file_) file_ << msg << std::endl;
@@ -19,8 +21,9 @@ FileLoggerHandler::~FileLoggerHandler() {
     if (file_.is_open()) file_.close();
 }
 
-Logger::Logger(std::string name, Level level)
-    : logger_name_(std::move(name)), log_level_(level) {}
+// --- Logger ---
+Logger::Logger(std::string name, Level level, std::vector<std::unique_ptr<LogHandler>> handlers)
+    : logger_name_(std::move(name)), log_level_(level), handlers_(std::move(handlers)) {}
 
 void Logger::log(Level level, const std::string& message) {
     if (level > log_level_) return;
@@ -40,10 +43,6 @@ void Logger::log(Level level, const std::string& message) {
     }
 }
 
-void Logger::addHandler(std::unique_ptr<LogHandler> handler) {
-    handlers_.push_back(std::move(handler));
-}
-
 void Logger::close() {
     handlers_.clear();
 }
@@ -59,15 +58,25 @@ std::string Logger::timestamp() {
     return oss.str();
 }
 
-Logger::Builder::Builder(std::string name) : name_(std::move(name)) {}
+// --- Builder ---
+Logger::Builder& Logger::Builder::setName(const std::string& name) {
+    name_ = name;
+    return *this;
+}
 
 Logger::Builder& Logger::Builder::setLevel(Level level) {
     level_ = level;
     return *this;
 }
 
+Logger::Builder& Logger::Builder::addHandler(std::unique_ptr<LogHandler> handler) {
+    handlers_.push_back(std::move(handler));
+    return *this;
+}
+
 Logger* Logger::Builder::build() {
-    auto* logger = new Logger(name_, level_);
-    logger->addHandler(std::make_unique<StreamLoggerHandler>(std::cout)); // по умолчанию
-    return logger;
+    if (handlers_.empty()) {
+        handlers_.push_back(std::make_unique<StreamLoggerHandler>(std::cout));
+    }
+    return new Logger(name_, level_, std::move(handlers_));
 }
