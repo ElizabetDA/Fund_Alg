@@ -1,60 +1,63 @@
 #pragma once
 #include <string>
-#include <memory>
 #include <vector>
+#include <memory>
 #include <fstream>
 #include <iostream>
 
-enum class LogLevel {
-	DEBUG,
-	INFO,
-	WARNING,
-	ERROR,
-	CRITICAL
-};
-
 class LogHandler {
 public:
-	virtual ~LogHandler() = default;
-	virtual void write(const std::string& message) = 0;
+    virtual ~LogHandler() = default;
+    virtual void write(const std::string& msg) = 0;
 };
 
-class FileLogHandler : public LogHandler {
+class StreamLoggerHandler : public LogHandler {
+    std::ostream& stream_;
 public:
-	explicit FileLogHandler(const std::string& filename);
-	void write(const std::string& message) override;
-	void close();
-private:
-	std::ofstream file;
+    explicit StreamLoggerHandler(std::ostream& stream = std::cout);
+    void write(const std::string& msg) override;
 };
 
-class ConsoleLogHandler : public LogHandler {
+class FileLoggerHandler : public LogHandler {
+    std::ofstream file_;
 public:
-	void write(const std::string& message) override;
+    explicit FileLoggerHandler(const std::string& filename);
+    void write(const std::string& msg) override;
+    ~FileLoggerHandler() override;
 };
 
 class Logger {
 public:
-	class Builder;
+    enum class Level {
+        CRITICAL,
+        ERROR,
+        WARNING,
+        INFO,
+        DEBUG
+    };
 
-	void log(LogLevel level, const std::string& message);
-	void close();
+    class Builder;
+
+    void log(Level level, const std::string& message);
+    void addHandler(std::unique_ptr<LogHandler> handler);
+    void close();
 
 private:
-	Logger() = default;
-	std::vector<std::unique_ptr<LogHandler>> handlers;
-	LogLevel currentLevel = LogLevel::DEBUG;
+    explicit Logger(std::string name, Level level);
+    std::string logger_name_;
+    Level log_level_;
+    std::vector<std::unique_ptr<LogHandler>> handlers_;
 
-	friend class Builder;
+    static std::string timestamp();
 };
 
-class Logger::Builder {
-public:
-	Builder& addFileHandler(const std::string& filename);
-	Builder& addConsoleHandler();
-	Builder& setLevel(LogLevel level);
-	std::unique_ptr<Logger> build();
+using LoggerBuilder = Logger::Builder;
 
-private:
-	std::unique_ptr<Logger> logger = std::make_unique<Logger>();
+class Logger::Builder {
+    std::string name_;
+    Level level_ = Level::DEBUG;
+public:
+    explicit Builder(std::string name);
+    Builder& setLevel(Level level);
+    Logger* build();
 };

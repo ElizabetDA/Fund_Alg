@@ -66,7 +66,8 @@ find_program(GENHTML genhtml)
 if(LCOV AND GENHTML)
     add_custom_target(coverage
             COMMAND ${LCOV} --ignore-errors mismatch --capture --directory . --output-file coverage.info
-            COMMAND ${LCOV} --remove coverage.info '/usr/*' '*/googletest/*' --ignore-errors unused --output-file coverage_filtered.info
+            #COMMAND ${LCOV} --remove coverage.info '/usr/*' '*/googletest/*' --ignore-errors unused --output-file coverage_filtered.info
+            COMMAND ${LCOV} --extract coverage.info "${PROJECT_SOURCE_DIR}/include/*" --output-file coverage_filtered.info
             COMMAND ${GENHTML} coverage_filtered.info --output-directory coverage_report
             COMMAND xdg-open coverage_report/index.html || open coverage_report/index.html
             WORKING_DIRECTORY ${CMAKE_BINARY_DIR}

@@ -1,144 +1,88 @@
-#include "../include/array.hpp"
-
 #include <gtest/gtest.h>
+#include <string>
+#include <memory>
+#include "array.hpp"
 
-namespace my_container {
-
-
-class ArrayTest : public ::testing::Test {
-   protected:
-	using IntArray5 = Array<int, 5>;
-	IntArray5 default_array;
-	IntArray5 init_array{1, 2, 3, 4, 5};
-	IntArray5 another_array{6, 7, 8, 9, 10};
-	void SetUp() override {
-	}
-};
+using namespace my_container;
 
 template <typename T, size_t N>
-void test_array_content(const Array<T, N>& arr, const std::vector<T>& expected) {
-	for (size_t i = 0; i < expected.size(); ++i) {
-		EXPECT_EQ(arr[i], expected[i]);
+using MyArray = Array<T, N>;
+
+class ArrayTest : public ::testing::Test {
+protected:
+	MyArray<int, 3> arr = {1, 2, 3};
+	MyArray<int, 3> empty_arr;
+};
+
+TEST_F(ArrayTest, DefaultConstructor) {
+	EXPECT_EQ(empty_arr.size(), 3);
+	for (const auto& item : empty_arr) {
+		EXPECT_EQ(item, 0);
 	}
 }
 
-TEST_F(ArrayTest, DefaultConstructor) {
-	test_array_content(default_array, {0, 0, 0, 0, 0});
-}
-
-TEST_F(ArrayTest, InitializerListConstructor) {
-	test_array_content(init_array, {1, 2, 3, 4, 5});
-	Array<int, 5> short_init{1, 2};
-	test_array_content(short_init, {1, 2, 0, 0, 0});
+TEST_F(ArrayTest, InitializerList) {
+	EXPECT_EQ(arr[0], 1);
+	EXPECT_THROW((MyArray<int, 3>{1, 2}), std::invalid_argument);
 }
 
 TEST_F(ArrayTest, CopyConstructor) {
-	IntArray5 copy(init_array);
-	test_array_content(copy, {1, 2, 3, 4, 5});
+	MyArray<int, 3> copy(arr);
+	EXPECT_EQ(arr, copy);
 }
 
 TEST_F(ArrayTest, MoveConstructor) {
-	IntArray5 moved(std::move(init_array));
-	test_array_content(moved, {1, 2, 3, 4, 5});
+	MyArray<std::string, 2> src{"Hello", "World"};
+	MyArray<std::string, 2> dest(std::move(src));
+	EXPECT_EQ(dest[0], "Hello");
 }
 
-TEST_F(ArrayTest, AssignmentOperator) {
-	default_array = init_array;
-	test_array_content(default_array, {1, 2, 3, 4, 5});
-	default_array = default_array;  // self-assign
-	test_array_content(default_array, {1, 2, 3, 4, 5});
+TEST_F(ArrayTest, ElementAccess) {
+	EXPECT_EQ(arr.at(0), 1);
+	EXPECT_THROW(arr.at(3), std::out_of_range);
+	arr[1] = 5;
+	EXPECT_EQ(arr[1], 5);
 }
 
-TEST_F(ArrayTest, SubscriptOperator) {
-	init_array[0] = 10;
-	EXPECT_EQ(init_array[0], 10);
-	const auto& const_ref = init_array;
-	EXPECT_EQ(const_ref[1], 2);
-}
-
-TEST_F(ArrayTest, ComparisonOperators) {
-	IntArray5 arr1{1, 2, 3, 4, 5};
-	IntArray5 arr2{1, 2, 3, 4, 5};
-	IntArray5 arr3{2, 1, 3, 4, 5};
-
-	EXPECT_EQ(arr1, arr2);
-	EXPECT_NE(arr1, arr3);
-	EXPECT_LT(arr1, arr3);
-	EXPECT_GT(arr3, arr1);
-}
-
-TEST_F(ArrayTest, SwapMethod) {
-	init_array.swap(another_array);
-	test_array_content(init_array, {6, 7, 8, 9, 10});
-	test_array_content(another_array, {1, 2, 3, 4, 5});
-}
-
-TEST_F(ArrayTest, AtMethod) {
-	EXPECT_EQ(init_array.at(0), 1);
-	EXPECT_THROW(init_array.at(5), std::out_of_range);
-	const auto& const_ref = init_array;
-	EXPECT_EQ(const_ref.at(4), 5);
-	EXPECT_THROW(const_ref.at(5), std::out_of_range);
-}
-
-TEST_F(ArrayTest, FrontBackMethods) {
-	EXPECT_EQ(init_array.front(), 1);
-	EXPECT_EQ(init_array.back(), 5);
-	const auto& const_ref = init_array;
-	EXPECT_EQ(const_ref.front(), 1);
-	EXPECT_EQ(const_ref.back(), 5);
-}
-
-TEST_F(ArrayTest, DataMethod) {
-	int* data = init_array.data();
-	EXPECT_EQ(data[0], 1);
-	const auto& const_ref = init_array;
-	const int* cdata = const_ref.data();
-	EXPECT_EQ(cdata[4], 5);
+TEST_F(ArrayTest, FrontBackData) {
+	EXPECT_EQ(arr.front(), 1);
+	EXPECT_EQ(arr.back(), 3);
+	arr.data()[0] = 100;
+	EXPECT_EQ(arr[0], 100);
 }
 
 TEST_F(ArrayTest, Iterators) {
-	size_t i = 0;
-	for (auto it = init_array.begin(); it != init_array.end(); ++it, ++i) {
-		EXPECT_EQ(*it, init_array[i]);
-	}
-	i = 0;
-	for (auto it = init_array.cbegin(); it != init_array.cend(); ++it, ++i) {
-		EXPECT_EQ(*it, init_array[i]);
-	}
+	int sum = 0;
+	for (const auto& item : arr) sum += item;
+	EXPECT_EQ(sum, 6);
 }
 
 TEST_F(ArrayTest, ReverseIterators) {
-	auto rit = init_array.rbegin();
-	EXPECT_EQ(*rit, 5);
-	++rit;
-	EXPECT_EQ(*rit, 4);
-	const auto& const_ref = init_array;
-	auto crit = const_ref.crbegin();
-	EXPECT_EQ(*crit, 5);
+	int sum = 0;
+	for (auto it = arr.rbegin(); it != arr.rend(); ++it) sum += *it;
+	EXPECT_EQ(sum, 6);
 }
 
-TEST_F(ArrayTest, SizeMethods) {
-	EXPECT_EQ(init_array.size(), 5);
-	EXPECT_EQ(init_array.max_size(), 5);
-	EXPECT_FALSE(init_array.empty());
+TEST_F(ArrayTest, FillAndSwap) {
+	empty_arr.fill(42);
+	for (const auto& item : empty_arr) EXPECT_EQ(item, 42);
+
+	MyArray<int, 3> a = {1, 2, 3};
+	MyArray<int, 3> b = {4, 5, 6};
+	a.swap(b);
+	EXPECT_EQ(a[0], 4);
+	EXPECT_EQ(b[0], 1);
 }
 
-TEST_F(ArrayTest, FillMethod) {
-	init_array.fill(42);
-	test_array_content(init_array, {42, 42, 42, 42, 42});
+TEST_F(ArrayTest, Comparisons) {
+	MyArray<int, 3> a = {1, 2, 3};
+	MyArray<int, 3> b = {1, 2, 4};
+	EXPECT_LT(a, b);
+	EXPECT_NE(a, b);
+	EXPECT_EQ(a, arr);
 }
 
-TEST_F(ArrayTest, AtOutOfRange) {
-	EXPECT_THROW(default_array.at(5), std::out_of_range);
-	const auto& const_ref = default_array;
-	EXPECT_THROW(const_ref.at(5), std::out_of_range);
-}
-
-}
-
-
-int main(int argc, char * argv[]) {
+int main(int argc, char** argv) {
 	::testing::InitGoogleTest(&argc, argv);
 	return RUN_ALL_TESTS();
 }

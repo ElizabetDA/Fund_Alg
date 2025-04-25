@@ -1,234 +1,132 @@
-
 #pragma once
-
-#include <algorithm>
-#include <compare>
-#include <iostream>
-#include <iterator>
-
 #include "container.hpp"
+#include <algorithm>
+#include <stdexcept>
+#include <initializer_list>
+#include <iterator>
+#include <cstddef>
 
 namespace my_container {
 
 template <typename T, size_t N>
 class Array final : public Container<T> {
-   private:
-	T elements[N]{};
+private:
+    T elements[N]{};
 
-   public:
-	using value_type = T;
-	using reference = T&;
-	using const_reference = const T&;
-	using iterator = T*;
-	using const_iterator = const T*;
-	using difference_type = ptrdiff_t;
-	using reverse_iterator = std::reverse_iterator<iterator>;
-	using const_reverse_iterator = std::reverse_iterator<const_iterator>;
+public:
+    using value_type = T;
+    using reference = T&;
+    using const_reference = const T&;
+    using iterator = T*;
+    using const_iterator = const T*;
+    using reverse_iterator = std::reverse_iterator<iterator>;
+    using const_reverse_iterator = std::reverse_iterator<const_iterator>;
+    using size_type = size_t;
 
-	Array() = default;
-	explicit Array(std::initializer_list<T> init) ;
-	~Array() = default;
-	Array(const Array<T, N>& other);
-	Array(Array<T, N>&& other) noexcept;
-	Array<T, N>& operator=(const Array<T, N>& other);
-	Array<T, N>& operator=(Array<T, N>&& other) noexcept;
+    // Конструкторы
+    Array() = default;
 
-	T& at(size_t index);
-	const T& at(size_t index) const;
-	T& operator[](size_t index);
-	const T& operator[](size_t index) const;
-	T& front();
-	const T& front() const;
-	T& back();
-	const T& back() const;
-	T* data() noexcept;
-	const T* data() const noexcept;
+    Array(std::initializer_list<T> init) {
+        if (init.size() != N) {
+            throw std::invalid_argument("Initializer list size mismatch");
+        }
+        std::copy(init.begin(), init.end(), elements);
+    }
 
-	iterator begin() noexcept;
-	const_iterator cbegin() const noexcept;
-	iterator end() noexcept;
-	const_iterator cend() const noexcept;
+    //~Array() override = default;
 
-	reverse_iterator rbegin() noexcept;
-	const_reverse_iterator crbegin() const noexcept;
-	reverse_iterator rend() noexcept;
-	const_reverse_iterator crend() const noexcept;
+    Array(const Array& other) {
+        std::copy(other.begin(), other.end(), elements);
+    }
 
-	bool empty() const noexcept override;
-	size_t size() const noexcept override;
-	size_t max_size() const noexcept override;
+    Array(Array&& other) noexcept {
+        std::move(other.begin(), other.end(), elements);
+    }
 
-	void fill(const T& value);
-	void swap(Array& other) noexcept;
+    // Операторы присваивания
+    Array& operator=(const Array& other) {
+        if (this != &other) {
+            std::copy(other.begin(), other.end(), elements);
+        }
+        return *this;
+    }
 
-	bool operator==(const Array<T, N>& rhs) const;
-	std::strong_ordering operator<=>(const Array<T, N>& rhs) const;
+    Container<T>& operator=(const Container<T>& other) {
+        const Array* p_other = dynamic_cast<const Array*>(&other);
+        if (!p_other) throw std::invalid_argument("Type mismatch");
+        return *this = *p_other;
+    }
+
+    // Доступ к элементам
+    T& at(size_t index) {
+        if (index >= N) throw std::out_of_range("Index out of range");
+        return elements[index];
+    }
+
+    const T& at(size_t index) const {
+        if (index >= N) throw std::out_of_range("Index out of range");
+        return elements[index];
+    }
+
+    T& operator[](size_t index) noexcept { return elements[index]; }
+    const T& operator[](size_t index) const noexcept { return elements[index]; }
+
+    T& front() noexcept { return elements[0]; }
+    const T& front() const noexcept { return elements[0]; }
+
+    T& back() noexcept { return elements[N - 1]; }
+    const T& back() const noexcept { return elements[N - 1]; }
+
+    T* data() noexcept { return elements; }
+    const T* data() const noexcept { return elements; }
+
+    // Итераторы
+    iterator begin() noexcept { return elements; }
+    const_iterator begin() const noexcept { return elements; }
+    const_iterator cbegin() const noexcept { return elements; }
+
+    iterator end() noexcept { return elements + N; }
+    const_iterator end() const noexcept { return elements + N; }
+    const_iterator cend() const noexcept { return elements + N; }
+
+    reverse_iterator rbegin() noexcept { return reverse_iterator(end()); }
+    const_reverse_iterator rbegin() const noexcept { return const_reverse_iterator(end()); }
+    const_reverse_iterator crbegin() const noexcept { return const_reverse_iterator(end()); }
+
+    reverse_iterator rend() noexcept { return reverse_iterator(begin()); }
+    const_reverse_iterator rend() const noexcept { return const_reverse_iterator(begin()); }
+    const_reverse_iterator crend() const noexcept { return const_reverse_iterator(begin()); }
+
+    // Размеры
+    [[nodiscard]] size_t size() const noexcept { return N; }
+    [[nodiscard]] size_t max_size() const noexcept { return N; }
+    [[nodiscard]] bool empty() const noexcept { return N == 0; }
+
+    // Утилиты
+    void fill(const T& value) { std::fill(begin(), end(), value); }
+    void swap(Array& other) noexcept {
+        std::swap_ranges(begin(), end(), other.begin());
+    }
+
+    // Сравнения
+    [[nodiscard]] bool operator==(const Container<T>& other) const {
+        const Array* p_other = dynamic_cast<const Array*>(&other);
+        return p_other && std::equal(begin(), end(), p_other->begin());
+    }
+
+    [[nodiscard]] bool operator!=(const Container<T>& other) const {
+        return !(*this == other);
+    }
+
+    [[nodiscard]] bool operator==(const Array& other) const {
+        return std::equal(begin(), end(), other.begin());
+    }
+
+    [[nodiscard]] std::strong_ordering operator<=>(const Array& other) const {
+        return std::lexicographical_compare_three_way(
+            begin(), end(), other.begin(), other.end()
+        );
+    }
 };
 
-
-template <typename T, size_t N>
-Array<T, N>::Array(std::initializer_list<T> init) {
-	size_t copy_size = std::min(init.size(), N);
-	std::copy_n(init.begin(), copy_size, elements);
-}
-
-template <typename T, size_t N>
-Array<T, N>::Array(const Array<T, N>& other) {
-	std::copy(other.cbegin(), other.cend(), this->begin());
-}
-
-template <typename T, size_t N>
-Array<T, N>::Array(Array<T, N>&& other) noexcept {
-	std::move(other.begin(), other.end(), this->begin());
-}
-
-template <typename T, size_t N>
-Array<T, N>& Array<T, N>::operator=(const Array<T, N>& other) {
-	if (this != &other) {
-		std::copy(other.cbegin(), other.cend(), this->begin());
-	}
-	return *this;
-}
-
-template <typename T, size_t N>
-Array<T, N>& Array<T, N>::operator=(Array<T, N>&& other)  noexcept {
-	if (this != &other) {
-		std::move(other.cbegin(), other.cend(), this->begin());
-	}
-	return *this;
-}
-
-template <typename T, size_t N>
-T& Array<T, N>::at(size_t index) {
-	if (index >= N) {
-		throw std::out_of_range("Index out of range");
-	}
-	return elements[index];
-}
-
-template <typename T, size_t N>
-const T& Array<T, N>::at(size_t index) const {
-	if (index >= N) {
-		throw std::out_of_range("Index out of range");
-	}
-	return elements[index];
-}
-
-template <typename T, size_t N>
-T& Array<T, N>::operator[](size_t index) {
-	return elements[index];
-}
-
-template <typename T, size_t N>
-const T& Array<T, N>::operator[](size_t index) const {
-	return elements[index];
-}
-
-template <typename T, size_t N>
-T& Array<T, N>::front() {
-	return elements[0];
-}
-
-template <typename T, size_t N>
-const T& Array<T, N>::front() const {
-	return elements[0];
-}
-
-template <typename T, size_t N>
-T& Array<T, N>::back() {
-	return elements[N - 1];
-}
-
-template <typename T, size_t N>
-const T& Array<T, N>::back() const {
-	return elements[N - 1];
-}
-
-template <typename T, size_t N>
-T* Array<T, N>::data() noexcept {
-	return elements;
-}
-
-template <typename T, size_t N>
-const T* Array<T, N>::data() const noexcept {
-	return elements;
-}
-
-template <typename T, size_t N>
-typename Array<T, N>::iterator Array<T, N>::begin() noexcept {
-	return elements;
-}
-
-template <typename T, size_t N>
-typename Array<T, N>::const_iterator Array<T, N>::cbegin() const noexcept {
-	return elements;
-}
-
-template <typename T, size_t N>
-typename Array<T, N>::iterator Array<T, N>::end() noexcept {
-	return elements + N;
-}
-
-template <typename T, size_t N>
-typename Array<T, N>::const_iterator Array<T, N>::cend() const noexcept {
-	return elements + N;
-}
-
-template <typename T, size_t N>
-typename Array<T, N>::reverse_iterator Array<T, N>::rbegin() noexcept {
-	return reverse_iterator(end());
-}
-
-template <typename T, size_t N>
-typename Array<T, N>::const_reverse_iterator Array<T, N>::crbegin() const noexcept {
-	return const_reverse_iterator(cend());
-}
-
-template <typename T, size_t N>
-typename Array<T, N>::reverse_iterator Array<T, N>::rend() noexcept {
-	return reverse_iterator(begin());
-}
-
-template <typename T, size_t N>
-typename Array<T, N>::const_reverse_iterator Array<T, N>::crend() const noexcept {
-	return const_reverse_iterator(cbegin());
-}
-
-template <typename T, size_t N>
-bool Array<T, N>::empty() const noexcept {
-	return size() == 0;
-}
-
-template <typename T, size_t N>
-size_t Array<T, N>::size() const noexcept {
-	return N;
-}
-
-template <typename T, size_t N>
-size_t Array<T, N>::max_size() const noexcept {
-	return N;
-}
-
-template <typename T, size_t N>
-void Array<T, N>::fill(const T& value) {
-	std::fill(begin(), end(), value);
-}
-
-template <typename T, size_t N>
-void Array<T, N>::swap(Array& other) noexcept {
-	for (size_t i = 0; i < N; ++i) {
-		std::swap(elements[i], other.elements[i]);
-	}
-}
-
-template <typename T, size_t N>
-bool Array<T, N>::operator==(const Array<T, N>& rhs) const {
-	return (*this <=> rhs) == std::strong_ordering::equal;
-}
-
-template <typename T, size_t N>
-std::strong_ordering Array<T, N>::operator<=>(const Array<T, N>& rhs) const {
-	return std::lexicographical_compare_three_way(cbegin(), cend(), rhs.cbegin(), rhs.cend());
-}
-
-}  // namespace my_container
+} // namespace my_container
