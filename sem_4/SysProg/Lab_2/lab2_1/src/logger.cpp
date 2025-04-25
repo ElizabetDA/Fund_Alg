@@ -3,13 +3,11 @@
 #include <iomanip>
 #include <sstream>
 
-// --- StreamLoggerHandler ---
 StreamLoggerHandler::StreamLoggerHandler(std::ostream& stream) : stream_(stream) {}
 void StreamLoggerHandler::write(const std::string& msg) {
     stream_ << msg << std::endl;
 }
 
-// --- FileLoggerHandler ---
 FileLoggerHandler::FileLoggerHandler(const std::string& filename) {
     file_.open(filename, std::ios::app);
     if (!file_) throw std::runtime_error("Cannot open file: " + filename);
@@ -21,7 +19,6 @@ FileLoggerHandler::~FileLoggerHandler() {
     if (file_.is_open()) file_.close();
 }
 
-// --- Logger ---
 Logger::Logger(std::string name, Level level, std::vector<std::unique_ptr<LogHandler>> handlers)
     : logger_name_(std::move(name)), log_level_(level), handlers_(std::move(handlers)) {}
 
@@ -58,7 +55,6 @@ std::string Logger::timestamp() {
     return oss.str();
 }
 
-// --- Builder ---
 Logger::Builder& Logger::Builder::setName(const std::string& name) {
     name_ = name;
     return *this;
