@@ -3,12 +3,14 @@
 #include <vector>
 #include <string>
 #include <random>
+#include <memory>
 
 int main() {
-	auto logger = LoggerBuilder("AppLogger").build();
-
-	logger->addHandler(std::make_unique<FileLoggerHandler>("output.log"));
-	logger->addHandler(std::make_unique<StreamLoggerHandler>(std::cout));
+	Logger* logger = Logger::Builder()
+		.addHandler(std::make_unique<FileLoggerHandler>("test.log"))
+		.addHandler(std::make_unique<StreamLoggerHandler>(std::cout))
+		.setName("Logger")
+		.build();
 
 	std::vector<std::string> messages = {
 		"Запуск системы",
@@ -21,9 +23,9 @@ int main() {
 	std::random_device rd;
 
 	for (int i = 0; i < 100; ++i) {
-		int raw = rd() % 5;
+		int lvl = rd() % 5;  // выбираем случайный уровень
 		const std::string& msg = messages[rd() % messages.size()];
-		logger->log(static_cast<Logger::Level>(raw), msg);
+		logger->log(static_cast<Logger::Level>(lvl), msg);
 	}
 
 	logger->close();
