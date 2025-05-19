@@ -1,0 +1,2 @@
+add_executable(compile_subserver src/main.cpp)
+target_include_directories(compile_subserver PRIVATE include)
