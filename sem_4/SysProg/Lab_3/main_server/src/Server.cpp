@@ -33,42 +33,63 @@ void Server::handleClient(Socket clientSock) {
             std::string cmd(buf.begin(), buf.end());
             Logger::info("Received: {}", cmd);
 
+            // --- БЛОК КОМПИЛЯЦИИ ---
             if (cmd.rfind("compile ", 0) == 0) {
                 std::string fn = cmd.substr(8);
                 CompileTask t{};
                 t.client_id = static_cast<int>(std::hash<std::thread::id>{}(std::this_thread::get_id()));
                 std::strncpy(t.filename, fn.c_str(), sizeof(t.filename)-1);
-                shm_.write(t);
-                // ждём, пока подсервер вернёт обратно — упрощённо тот же task
-                shm_.read();
+                shm_.write(t);         // отдали задачу
+                shm_.read();           // ждём, пока вернут
                 std::string reply = "Compiled " + fn;
                 uint32_t rl = reply.size();
                 clientSock.send(&rl, sizeof(rl));
                 clientSock.send(reply.data(), rl);
 
+            // --- БЛОК ИГРЫ ---
             } else if (cmd.rfind("game ", 0) == 0) {
-            	int take = std::stoi(cmd.substr(5));
-            	// валидация хода, если нужно
-            	if (take < 1 || take > 3) {
-            		std::string err = "Error: invalid move (1-3 only)";
-            		uint32_t l = err.size();
-            		clientSock.send(&l, sizeof(l));
-            		clientSock.send(err.data(), l);
-            		continue;
-            	}
-            	// используем фиксированный mtype = 1
-            	GameMsg out{ 1, take };
-            	mq_.send(out);
+                int take = std::stoi(cmd.substr(5));
 
-            	// ждём ответ от подсерверa game_subserver
-            	GameMsg in = mq_.recv(1);
-            	std::string reply = "Server took " + std::to_string(in.take);
-            	uint32_t rl = reply.size();
-            	clientSock.send(&rl, sizeof(rl));
-            	clientSock.send(reply.data(), rl);
+                // 1) валидация входного хода
+                if (take < 1 || take > 3) {
+                    std::string err = "Error: invalid move (1-3 only)";
+                    uint32_t l = err.size();
+                    clientSock.send(&l, sizeof(l));
+                    clientSock.send(err.data(), l);
+                    continue;
+                }
+
+                // 2) отправляем ход в очередь mtype=1
+                GameMsg out{ 1, take };
+                mq_.send(out);
+
+                // 3) ждём ответ от подсерверa (тот же mtype)
+                GameMsg in = mq_.recv(1);
+
+                // 4) формируем ответ по трём состояниям
+                std::string reply;
+                if (in.take < 0) {
+                    // защита от внутренних ошибок
+                    reply = "Error: invalid move (1-3 only)";
+                }
+                else if (in.take == 0) {
+                    // сигнал, что игра закончилась и клиент выиграл
+                    reply = "Game over — you win!";
+                }
+                else {
+                    // обычный ход сервера
+                    reply = "Server took " + std::to_string(in.take);
+                }
+
+                uint32_t rl = reply.size();
+                clientSock.send(&rl, sizeof(rl));
+                clientSock.send(reply.data(), rl);
+
+            // --- Завершение сессии ---
             } else if (cmd == "quit") {
                 break;
 
+            // --- Неизвестная команда ---
             } else {
                 std::string reply = "Unknown command";
                 uint32_t rl = reply.size();

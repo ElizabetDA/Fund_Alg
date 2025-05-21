@@ -70,3 +70,5 @@ int main(){
 	}
 	return 0;
 }
+
+//g++ -O2 -std=c++17 src/benchmark.cpp -Iinclude -o bench

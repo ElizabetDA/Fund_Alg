@@ -8,58 +8,73 @@
 #include <cstring>
 #include <cerrno>
 
-// Структура задачи компиляции
+// структура задачи компиляции
 struct CompileTask {
-	int client_id;
-	char filename[256];
+    int client_id;
+    char filename[256];
 };
 
 class SharedMemSem {
 public:
-	SharedMemSem(key_t key, size_t size) {
-		shmid_ = shmget(key, size, IPC_CREAT | 0666);
-		if (shmid_ == -1) throw std::runtime_error("shmget failed");
-		semid_ = semget(key, 2, IPC_CREAT | 0666);
-		if (semid_ == -1) throw std::runtime_error("semget failed");
-		// подключаем SHM
-		mem_ = (char*)shmat(shmid_, nullptr, 0);
-		if (mem_ == (char*)-1) throw std::runtime_error("shmat failed");
-		// ИНИЦИАЛИЗАЦИЯ СЕМАФОРОВ:
-		// sem 0 = empty slots = 1
-		semctl(semid_, 0, SETVAL, 1);
-		// sem 1 = full slots = 0
-		semctl(semid_, 1, SETVAL, 0);
-	}
+    SharedMemSem(key_t key, size_t size) {
+        // создаём разделяемую память
+        shmid_ = shmget(key, size, IPC_CREAT | 0666);
+        if (shmid_ == -1)
+            throw std::runtime_error(std::string("shmget failed: ") + std::strerror(errno));
 
-	~SharedMemSem() {
-		shmdt(mem_);
-	}
+        // создаём 2-семафорную группу: sem0 и sem1
+        semid_ = semget(key, 2, IPC_CREAT | 0666);
+        if (semid_ == -1)
+            throw std::runtime_error(std::string("semget failed: ") + std::strerror(errno));
 
-	void write(const CompileTask& task) {
-		// дождаться sem0>0
-		struct sembuf op{0, -1, 0};
-		semop(semid_, &op, 1);
-		std::memcpy(mem_, &task, sizeof(task));
-		// сигнал sem1
-		op = {1, 1, 0};
-		semop(semid_, &op, 1);
-	}
+        // подключаем SHM
+        mem_ = static_cast<char*>(shmat(shmid_, nullptr, 0));
+        if (mem_ == reinterpret_cast<char*>(-1))
+            throw std::runtime_error(std::string("shmat failed: ") + std::strerror(errno));
 
-	CompileTask read() {
-		// дождаться sem1>0
-		struct sembuf op{1, -1, 0};
-		semop(semid_, &op, 1);
-		CompileTask t;
-		std::memcpy(&t, mem_, sizeof(t));
-		// сигнал sem0
-		op = {0, 1, 0};
-		semop(semid_, &op, 1);
-		return t;
-	}
+        // Инициализация:
+        // sem0 = 1 (есть один «пустой» слот),
+        // sem1 = 0 (пустых «полных» слотов нет)
+        if (semctl(semid_, 0, SETVAL, 1) == -1 ||
+            semctl(semid_, 1, SETVAL, 0) == -1)
+        {
+            throw std::runtime_error(std::string("semctl SETVAL failed: ") + std::strerror(errno));
+        }
+    }
+
+    ~SharedMemSem() {
+        shmdt(mem_);
+    }
+
+    // запись задачи (сервер)
+    void write(const CompileTask& task) {
+        // ждем sem0 > 0 (пустой слот)
+        struct sembuf p{0, -1, 0};
+        semop(semid_, &p, 1);
+        // пишем задачу
+        std::memcpy(mem_, &task, sizeof(task));
+        // сигналим sem1 (теперь есть «полный» слот)
+        struct sembuf v{1, +1, 0};
+        semop(semid_, &v, 1);
+    }
+
+    // чтение задачи (подсервер)
+    CompileTask read() {
+        // ждём sem1 > 0 (появился «полный» слот)
+        struct sembuf p{1, -1, 0};
+        semop(semid_, &p, 1);
+        // читаем задачу
+        CompileTask t;
+        std::memcpy(&t, mem_, sizeof(t));
+        // сигналим sem0 (освободился «пустой» слот)
+        struct sembuf v{0, +1, 0};
+        semop(semid_, &v, 1);
+        return t;
+    }
 
 private:
-	int shmid_, semid_;
-	char* mem_;
+    int shmid_{-1}, semid_{-1};
+    char* mem_{nullptr};
 };
 
 #endif // SHAREDMEMSEM_HPP
