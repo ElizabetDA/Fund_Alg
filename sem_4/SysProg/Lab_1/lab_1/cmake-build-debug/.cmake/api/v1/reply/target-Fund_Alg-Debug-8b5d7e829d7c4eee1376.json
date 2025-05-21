@@ -1,0 +1,125 @@
+{
+	"artifacts" : 
+	[
+		{
+			"path" : "Fund_Alg"
+		}
+	],
+	"backtrace" : 1,
+	"backtraceGraph" : 
+	{
+		"commands" : 
+		[
+			"add_executable",
+			"target_include_directories"
+		],
+		"files" : 
+		[
+			"CMakeLists.txt"
+		],
+		"nodes" : 
+		[
+			{
+				"file" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 13,
+				"parent" : 0
+			},
+			{
+				"command" : 1,
+				"file" : 0,
+				"line" : 16,
+				"parent" : 0
+			}
+		]
+	},
+	"compileGroups" : 
+	[
+		{
+			"compileCommandFragments" : 
+			[
+				{
+					"fragment" : "-g -std=gnu99 -fdiagnostics-color=always"
+				}
+			],
+			"includes" : 
+			[
+				{
+					"backtrace" : 2,
+					"path" : "/home/elizabet/CLionProjects/Fund_Alg/sem_4/SysProg/lab_1"
+				}
+			],
+			"language" : "C",
+			"languageStandard" : 
+			{
+				"backtraces" : 
+				[
+					1
+				],
+				"standard" : "99"
+			},
+			"sourceIndexes" : 
+			[
+				0
+			]
+		}
+	],
+	"id" : "Fund_Alg::@6890427a1f51a3e7e1df",
+	"link" : 
+	{
+		"commandFragments" : 
+		[
+			{
+				"fragment" : "-g",
+				"role" : "flags"
+			},
+			{
+				"fragment" : "",
+				"role" : "flags"
+			}
+		],
+		"language" : "C"
+	},
+	"name" : "Fund_Alg",
+	"nameOnDisk" : "Fund_Alg",
+	"paths" : 
+	{
+		"build" : ".",
+		"source" : "."
+	},
+	"sourceGroups" : 
+	[
+		{
+			"name" : "Source Files",
+			"sourceIndexes" : 
+			[
+				0
+			]
+		},
+		{
+			"name" : "Header Files",
+			"sourceIndexes" : 
+			[
+				1
+			]
+		}
+	],
+	"sources" : 
+	[
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "1.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "utility.h",
+			"sourceGroupIndex" : 1
+		}
+	],
+	"type" : "EXECUTABLE"
+}
